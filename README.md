@@ -25,24 +25,27 @@ PPT 模板化排版工程：模板资源、排版脚本与导出产物的统一�
 origin  https://github.com/hl54hlhl2008/ppt-template-layout.git
 ```
 
-本地仓库已初始化（`main`）、完成首次提交，并已指向该地址。远端仓库尚未创建，
-创建后即可推送：
-
-1. 打开 <https://github.com/new>，仓库名填 `ppt-template-layout`，**不要**勾选
-   "Add a README file"（避免与本地首次提交冲突），建议选 Private。
-2. 在本地仓库目录执行：
+本地仓库已初始化（`main`）并推送到远端，`origin/main` 与本地 HEAD 一致，已建立跟踪关系。
+新的 clone 用：
 
 ```bash
-git push -u origin main
+git clone https://github.com/hl54hlhl2008/ppt-template-layout.git
 ```
 
-## 未完成的推送与排错记录
+日常提交后 `git push` 即可。若从新机器推送，先确认凭据可用：
 
-当前环境实测结论（详见下表）：网络到 GitHub 正常，阻塞点在**认证与远端仓库是否存在**。
+```bash
+git config --get credential.helper     # macOS 默认 osxkeychain
+ssh -T git@github.com                  # 或走 SSH
+```
+
+## 排错记录
+
+环境实测结论（详见下表）：网络到 GitHub 正常，历史问题集中在**认证与权限**。
 
 | 现象 | 原因 | 处理 |
 | --- | --- | --- |
-| `remote: Repository not found.` | 远端仓库 `hl54hlhl2008/ppt-template-layout` 尚未创建 | 按上面第 1 步在网页创建空仓库 |
+| `remote: Repository not found.` | 远端仓库尚未创建 | 在网页创建空仓库（不要勾初始化文件） |
 | `fatal: failed to get: 100001` + `could not read Username` | macOS 钥匙串条目需人工确认，非交互 shell 读不到 token | 在终端里手动 `git push`，弹窗选"始终允许"；或改用 PAT |
 | `Permission denied (publickey)` | `~/.ssh/id_ed25519.pub` 未添加到 GitHub | 粘贴公钥到 Settings → SSH keys |
 | `Host key verification failed` | `github.com` 不在 `known_hosts` 且当前会话无法写入 `~/.ssh` | 在终端执行一次 `ssh -T git@github.com` 接受指纹 |
