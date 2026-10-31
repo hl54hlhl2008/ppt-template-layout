@@ -17,39 +17,45 @@ PPT 模板化排版工程：模板资源、排版脚本与导出产物的统一�
 - `feat/*`：单个版式或脚本改动。
 - `fix/*`：缺陷修复。
 
-提交信息采用 `type(scope): summary` 形式，例如
-`feat(layout): 增加三栏图文版式`。
+提交信息采用 `type(scope): summary`，例如 `feat(layout): 增加三栏图文版式`。
 
-## 首次推送到 GitHub
+## 远端配置
 
-仓库已初始化并完成本地首次提交，远端地址使用占位符 `GITHUB_USER`。
-二选一：
-
-### A. 一条命令创建远端并推送（Token 方式，无需安装 gh）
-
-```bash
-export GH_TOKEN=<你的 PAT，需 repo 权限>
-export GITHUB_USER=<你的 GitHub 用户名>     # 可省略，脚本会自动获取
-./scripts/create-github-repo.sh              # 默认创建 private 仓库
+```text
+origin  https://github.com/hl54hlhl2008/ppt-template-layout.git
 ```
 
-### B. 手动创建
+本地仓库已初始化（`main`）、完成首次提交，并已指向该地址。远端仓库尚未创建，
+创建后即可推送：
 
-1. 在 GitHub 网页 New repository，名称 `ppt-template-layout`，不要勾选初始化 README。
-2. 本地执行：
+1. 打开 <https://github.com/new>，仓库名填 `ppt-template-layout`，**不要**勾选
+   "Add a README file"（避免与本地首次提交冲突），建议选 Private。
+2. 在本地仓库目录执行：
 
 ```bash
-git remote add origin https://github.com/GITHUB_USER/ppt-template-layout.git
 git push -u origin main
 ```
 
-### C. SSH 方式（需先把公钥加到 GitHub）
+## 未完成的推送与排错记录
+
+当前环境实测结论（详见下表）：网络到 GitHub 正常，阻塞点在**认证与远端仓库是否存在**。
+
+| 现象 | 原因 | 处理 |
+| --- | --- | --- |
+| `remote: Repository not found.` | 远端仓库 `hl54hlhl2008/ppt-template-layout` 尚未创建 | 按上面第 1 步在网页创建空仓库 |
+| `fatal: failed to get: 100001` + `could not read Username` | macOS 钥匙串条目需人工确认，非交互 shell 读不到 token | 在终端里手动 `git push`，弹窗选"始终允许"；或改用 PAT |
+| `Permission denied (publickey)` | `~/.ssh/id_ed25519.pub` 未添加到 GitHub | 粘贴公钥到 Settings → SSH keys |
+| `Host key verification failed` | `github.com` 不在 `known_hosts` 且当前会话无法写入 `~/.ssh` | 在终端执行一次 `ssh -T git@github.com` 接受指纹 |
+| API 创建仓库返回 `403 Resource not accessible by personal access token` | 已存的 PAT 无仓库创建权限 | 网页创建仓库，或给 PAT 勾选 Administration 写权限 |
+
+### 用 PAT 推送（绕过钥匙串）
 
 ```bash
-cat ~/.ssh/id_ed25519.pub          # 复制到 GitHub → Settings → SSH keys
-git remote add origin git@github.com:GITHUB_USER/ppt-template-layout.git
-git push -u origin main
+export GH_TOKEN=<PAT，需 repo 权限>
+REPO_NAME=ppt-template-layout ./scripts/create-github-repo.sh
 ```
+
+脚本用一次性 `Authorization` 头推送，不会把 token 写进 `.git/config`。
 
 ## 日常操作
 

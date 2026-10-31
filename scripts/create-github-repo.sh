@@ -10,7 +10,7 @@ set -euo pipefail
 REPO_NAME="${REPO_NAME:-ppt-template-layout}"
 VISIBILITY="${VISIBILITY:-private}"
 TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
-USER="${GITHUB_USER:-}"
+USER="${GITHUB_USER:-hl54hlhl2008}"
 
 die() { printf '错误: %s\n' "$1" >&2; exit 1; }
 
@@ -31,9 +31,12 @@ echo "→ 账号: $USER  仓库: $REPO_NAME  可见性: $VISIBILITY"
 if api "https://api.github.com/repos/$USER/$REPO_NAME" >/dev/null 2>&1; then
   echo "→ 远端仓库已存在，复用"
 else
-  api -X POST https://api.github.com/user/repos \
+  if ! api -X POST https://api.github.com/user/repos \
     -d "{\"name\":\"$REPO_NAME\",\"private\":$([ "$VISIBILITY" = private ] && echo true || echo false),\"description\":\"PPT 模板化排版工程\"}" \
-    >/dev/null
+    >/dev/null 2>/tmp/gh_create_err.txt; then
+    printf '创建仓库失败: %s\n' "$(tr -d '\n' < /tmp/gh_create_err.txt)" >&2
+    die "若提示 Resource not accessible by personal access token，请到 https://github.com/new 手动创建空仓库 $REPO_NAME 后重跑本脚本"
+  fi
   echo "→ 已创建远端仓库"
 fi
 
