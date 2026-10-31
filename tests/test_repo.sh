@@ -8,6 +8,7 @@ cd "$ROOT" || exit 1
 
 pass=0
 fail=0
+skip=0
 ok()   { printf '  ok   %s\n' "$1"; pass=$((pass + 1)); }
 bad()  { printf '  FAIL %s\n' "$1"; fail=$((fail + 1)); }
 case_() { if eval "$2"; then ok "$1"; else bad "$1"; fi; }
@@ -33,16 +34,30 @@ case_ "含 MVP 里程碑"          "grep -q '^## 7. MVP 范围与里程碑' docs
 case_ "M1/M2/M3 均定义"        "[ \"\$(grep -cE '^\| M[123] ' docs/PRD.md)\" -ge 3 ]"
 case_ "配图优先级链完整"       "grep -q '手动指定 > 图库命中 > 待配图清单' docs/PRD.md"
 
-echo "== 3. 卫生检查 =="
+echo "== 3. Demo 检查 =="
+case_ "demo/index.html 存在"   "[ -s demo/index.html ]"
+case_ "六个视图均已实现"       "[ \"\$(grep -cE '^function view(Home|Library|Decks|Gallery|Wizard|Preview)\(' demo/index.html)\" -eq 6 ]"
+case_ "无外链静态资源"         "! grep -qE '(src|href)=\"https?://' demo/index.html"
+case_ "支持深链跳转"           "grep -q 'bootFromHash' demo/index.html"
+case_ "配图优先级链在界面中"   "grep -q '手动指定 &gt; 图库命中 &gt; 待配图清单' demo/index.html"
+if python3 -c "import dukpy" >/dev/null 2>&1; then
+  case_ "Demo 逻辑测试通过"    "python3 tests/run_demo_tests.py"
+else
+  printf '  skip Demo 逻辑测试（pip install dukpy 后可运行）\n'
+  skip=$((skip + 1))
+fi
+
+echo "== 4. 卫生检查 =="
 case_ "脚本可执行"             "[ -x scripts/create-github-repo.sh ]"
 case_ "脚本语法正确"           "bash -n scripts/create-github-repo.sh"
 case_ "无合并冲突残留"         "! grep -rIl -E '^(<<<<<<< |>>>>>>> )' --include='*.md' --include='*.sh' --include='*.py' . 2>/dev/null | grep -q ."
 case_ "无 .DS_Store 入库"      "! git ls-files | grep -q '.DS_Store'"
 case_ "无 Office 临时文件入库" "! git ls-files | grep -qE '~\\\$'"
 
-echo "== 4. 提交与远端 =="
+echo "== 5. 提交与远端 =="
 case_ "存在至少一个提交"       "git rev-parse --verify HEAD >/dev/null 2>&1"
 case_ "已配置远端 origin"      "git remote get-url origin >/dev/null 2>&1"
 
-printf '\n通过 %d 项，失败 %d 项\n' "$pass" "$fail"
+
+printf '\n通过 %d 项，失败 %d 项，跳过 %d 项\n' "$pass" "$fail" "$skip"
 [ "$fail" -eq 0 ]

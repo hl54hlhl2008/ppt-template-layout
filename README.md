@@ -6,10 +6,30 @@ PPT 模板化排版工程：模板资源、排版脚本与导出产物的统一�
 
 | 路径 | 用途 |
 | --- | --- |
+| `docs/` | 产品设计文档（PRD）与方案记录 |
+| `demo/` | 可交互的前端 Demo（模拟数据，无后端） |
 | `templates/` | `.pptx` / `.potx` 母版与版式模板 |
 | `assets/` | 图片、字体、图标等静态资源 |
 | `scripts/` | 排版、批量导出、校验脚本 |
+| `tests/` | 仓库校验与 Demo 逻辑测试 |
 | `output/` | 生成结果（已在 `.gitignore` 中忽略） |
+
+## Demo（界面与流程原型）
+
+单文件、零依赖、无后端：直接双击 `demo/index.html`，或在地址后加深链：
+
+```text
+demo/index.html#library     # 模板库
+demo/index.html#decks       # 方案模板编辑
+demo/index.html#gallery     # 图库
+demo/index.html#wizard      # 新建方案向导（第 2 步）
+demo/index.html#preview     # 生成结果预览（#preview-2 跳到第 2 页）
+```
+
+演示路径：工作台 →「+ 新建方案」→ 选模板 → 填文案 → 配图生成 → 预览调字段/换图。
+所有解析与生成均为模拟动画，数据写死在脚本里，不发任何网络请求。
+
+![工作台](demo/screenshots/01-home.png)
 
 ## 分支策略
 

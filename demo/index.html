@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案排版台 · Demo</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#161a21; --panel-2:#1c212a; --line:#252c38;
+    --text:#e8ecf3; --muted:#8b97a8; --accent:#4f8cff; --accent-2:#7bd88f;
+    --warn:#f2b544; --danger:#f2635f; --radius:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font:14px/1.55 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font:inherit;color:inherit;cursor:pointer}
+  .app{display:grid;grid-template-columns:216px 1fr;height:100vh;overflow:hidden}
+
+  /* ---------- 侧栏 ---------- */
+  .side{background:var(--panel);border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:22px}
+  .brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+  .brand-mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#4f8cff,#7b5cff);display:grid;place-items:center;font-weight:700;font-size:14px}
+  .brand-name{font-weight:600;letter-spacing:.2px}
+  .brand-sub{font-size:11px;color:var(--muted);margin-top:-4px}
+  .nav{display:flex;flex-direction:column;gap:2px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:transparent;border-radius:9px;color:var(--muted);text-align:left;width:100%}
+  .nav-item:hover{background:var(--panel-2);color:var(--text)}
+  .nav-item.on{background:#1e2a44;color:#cfe0ff}
+  .nav-item .ico{width:18px;text-align:center;opacity:.9}
+  .side-foot{margin-top:auto;font-size:11px;color:#5d6778;padding:0 8px;line-height:1.7}
+  .side-foot b{color:#7d8798;font-weight:600}
+
+  /* ---------- 主区 ---------- */
+  .main{overflow:auto;padding:22px 26px 40px}
+  .top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
+  h1{font-size:19px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:12.5px}
+  .btn{border:1px solid var(--line);background:var(--panel-2);padding:8px 13px;border-radius:9px;color:var(--text)}
+  .btn:hover{border-color:#39445a}
+  .btn.primary{background:var(--accent);border-color:transparent;color:#fff;font-weight:600}
+  .btn.primary:hover{background:#3f7bf0}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:5px 9px;font-size:12px;border-radius:7px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .grid{display:grid;gap:12px}
+  .muted{color:var(--muted)}
+  .tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:2px 8px;border-radius:999px;background:#1e2531;color:#9fb0c7;border:1px solid #2a3342}
+  .tag.ok{background:#16281d;color:#8fe0a4;border-color:#24402e}
+  .tag.warn{background:#2a2213;color:#f2c46a;border-color:#453718}
+  .tag.bad{background:#2b1a19;color:#f28e8a;border-color:#4a2624}
+  .tag.info{background:#172438;color:#8fb6ff;border-color:#23395c}
+
+  /* ---------- 工作台 ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  .stat-num{font-size:22px;font-weight:650;letter-spacing:.3px}
+  .stat-label{font-size:12px;color:var(--muted)}
+  .deck-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  .deck-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:.15s;cursor:pointer}
+  .deck-card:hover{transform:translateY(-2px);border-color:#39445a}
+  .deck-cover{aspect-ratio:16/9;position:relative;overflow:hidden}
+  .deck-body{padding:12px 14px}
+  .deck-title{font-weight:600;margin-bottom:4px}
+
+  /* ---------- 幻灯片渲染 ---------- */
+  .stage{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:8px;background:#0b0d11}
+  .slide{position:absolute;top:0;left:0;width:1280px;height:720px;transform-origin:top left;background:#fff;color:#1a1f2a;font-family:"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+  .slide .pad{padding:64px 72px;height:100%;display:flex;flex-direction:column}
+  .thumb-wrap{width:180px;aspect-ratio:16/9;overflow:hidden;border-radius:6px;background:#0b0d11;position:relative}
+  .thumb-wrap .slide{transform:scale(.140625)}
+  .slide .brandline{font-size:20px;letter-spacing:3px;color:#8b95a7}
+  .cover-h{font-size:66px;line-height:1.15;font-weight:800;letter-spacing:-1px}
+  .cover-p{font-size:24px;color:#5d6a80;margin-top:18px}
+  .cover-tag{display:inline-block;align-self:flex-start;font-size:16px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.16);backdrop-filter:blur(4px)}
+  .hl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;flex:1}
+  .hl-card{border-radius:18px;padding:28px 24px;background:#f4f6fa;display:flex;flex-direction:column;gap:14px}
+  .hl-num{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:19px;color:#fff}
+  .hl-title{font-size:26px;font-weight:700}
+  .hl-text{font-size:17px;line-height:1.7;color:#5b6678;flex:1}
+  .hl-img{height:112px;border-radius:12px;position:relative;overflow:hidden}
+  .slide-h2{font-size:42px;font-weight:800;margin:0 0 8px;letter-spacing:-.5px}
+  .slide-sub{font-size:18px;color:#7b8698;margin-bottom:30px}
+  .tbl{width:100%;border-collapse:collapse;font-size:18px}
+  .tbl th{text-align:left;padding:14px 16px;background:#f1f4f9;color:#48546a;font-weight:600;font-size:15px;letter-spacing:.5px}
+  .tbl td{padding:15px 16px;border-bottom:1px solid #e7ebf2;vertical-align:top}
+  .tbl .day{font-weight:700;color:#2b6cff;white-space:nowrap}
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;flex:1;align-content:center}
+  .stat-box{border-radius:16px;padding:26px 20px;background:#f4f6fa;text-align:center}
+  .stat-v{font-size:52px;font-weight:800;letter-spacing:-1px}
+  .stat-k{font-size:16px;color:#6b7688;margin-top:4px}
+  .slide .foot{margin-top:auto;display:flex;justify-content:space-between;font-size:15px;color:#9aa4b4;border-top:1px solid #e7ebf2;padding-top:16px}
+  .img-ph{position:relative;overflow:hidden;display:grid;place-items:center}
+  .img-ph .lbl{position:absolute;left:10px;bottom:8px;font-size:14px;color:rgba(255,255,255,.92);background:rgba(0,0,0,.32);padding:3px 9px;border-radius:999px}
+  .img-ph .warn-dot{position:absolute;right:10px;top:10px;font-size:13px;background:#f2b544;color:#3a2a00;padding:3px 9px;border-radius:999px;font-weight:600}
+  .overflow .slide-h2,.overflow .cover-h{outline:3px dashed #f2635f;outline-offset:6px}
+
+  /* ---------- 模板库 ---------- */
+  .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:transparent;color:var(--muted);padding:5px 12px;border-radius:999px;font-size:12.5px}
+  .chip.on{background:#1e2a44;border-color:#2f4a7a;color:#cfe0ff}
+  .tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+  .tpl-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .tpl-card:hover{border-color:#39445a}
+  .tpl-meta{padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .tpl-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ---------- 方案模板编辑器 ---------- */
+  .split{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+  .list-item{display:flex;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:9px;cursor:pointer;border:1px solid transparent}
+  .list-item:hover{background:var(--panel-2)}
+  .list-item.on{background:#1e2a44;border-color:#2f4a7a}
+  .seq{display:flex;flex-direction:column;gap:10px}
+  .seq-row{display:grid;grid-template-columns:24px 180px 1fr auto;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+  .seq-idx{width:22px;height:22px;border-radius:6px;background:var(--panel-2);display:grid;place-items:center;font-size:11px;color:var(--muted)}
+  .icon-btn{width:26px;height:26px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--muted)}
+  .icon-btn:hover{color:var(--text);border-color:#39445a}
+  .empty{border:1px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--muted);font-size:13px}
+
+  /* ---------- 向导 ---------- */
+  .stepper{display:flex;gap:8px;align-items:center;margin-bottom:20px}
+  .step{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .step .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--panel-2);border:1px solid var(--line);font-size:12px}
+  .step.on{color:#cfe0ff}
+  .step.on .n{background:var(--accent);border-color:transparent;color:#fff;font-weight:600}
+  .step.done .n{background:#1d3a2a;border-color:#2b5540;color:#8fe0a4}
+  .step-line{height:1px;width:34px;background:var(--line)}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+  input[type=text],textarea,select{
+    width:100%;background:#12161c;border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:9px 11px;font:inherit;font-size:13px;outline:none;
+  }
+  input:focus,textarea:focus,select:focus{border-color:#3a5a92;background:#141a22}
+  textarea{resize:vertical;min-height:64px;line-height:1.6}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .hint{font-size:11.5px;color:#6b7688;margin-top:5px}
+  .pbar{height:6px;background:#12161c;border-radius:999px;overflow:hidden;margin:8px 0 4px}
+  .pbar > i{display:block;height:100%;background:linear-gradient(90deg,#4f8cff,#7bd88f);width:0;transition:width .35s ease}
+  .log{font-size:12px;color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;min-height:18px}
+
+  /* ---------- 预览 ---------- */
+  .preview{display:grid;grid-template-columns:180px minmax(0,1fr) 320px;gap:16px;align-items:start}
+  .thumbs{display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 150px);overflow:auto;padding-right:2px}
+  .thumb-btn{border:2px solid transparent;padding:0;background:none;border-radius:7px;overflow:hidden;position:relative;line-height:0}
+  .thumb-btn.on{border-color:var(--accent)}
+  .thumb-btn .thumb-wrap{width:152px;display:block;margin:2px}
+  .thumb-btn .num{position:absolute;left:4px;top:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;line-height:1.5}
+  .thumb-btn .dot{position:absolute;right:4px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--warn)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .panel h3{margin:0 0 10px;font-size:13px;letter-spacing:.3px;color:#c3cddb}
+  .panel textarea{resize:none}
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed #212836;font-size:12.5px}
+  .kv:last-child{border-bottom:0}
+  .issue{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:8px;font-size:12.5px;margin-bottom:8px;background:#1a1f28;border:1px solid #232b39}
+  .img-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .img-swatch{aspect-ratio:4/3;border-radius:7px;border:2px solid transparent;position:relative;overflow:hidden}
+
+  /* ---------- 弹窗 / toast ---------- */
+  .veil{position:fixed;inset:0;background:rgba(6,8,12,.66);display:grid;place-items:center;z-index:50;backdrop-filter:blur(2px)}
+  .modal{width:440px;max-width:92vw;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .modal h2{margin:0 0 6px;font-size:16px}
+  .modal p{margin:0 0 14px;color:var(--muted);font-size:12.5px}
+  .toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:60}
+  .toast{background:#1c2431;border:1px solid #2c3748;border-left:3px solid var(--accent-2);padding:10px 14px;border-radius:8px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.4);animation:in .18s ease}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .hidden{display:none !important}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#242c3a;border-radius:9px}
+  ::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="brand-mark">排</div>
+      <div>
+        <div class="brand-name">方案排版台</div>
+        <div class="brand-sub">Demo · 模拟数据</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="nav-item on" data-view="home"><span class="ico">◫</span>工作台</button>
+      <button class="nav-item" data-view="library"><span class="ico">▤</span>模板库</button>
+      <button class="nav-item" data-view="decks"><span class="ico">≡</span>方案模板</button>
+      <button class="nav-item" data-view="gallery"><span class="ico">▣</span>图库</button>
+    </nav>
+    <div class="side-foot">
+      <div><b>MVP 演示</b>：全部为本地模拟数据</div>
+      <div>不做真实解析与生成</div>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   模拟数据
+   ========================================================= */
+const DB = {
+  pages: [
+    { id:"p-cover-1", name:"封面 · 全幅渐变", type:"封面", layout:"cover-full", hue:[222,262], deck:"2025 徽州研学方案.pptx", page:1, uses:12 },
+    { id:"p-cover-2", name:"封面 · 左图右文", type:"封面", layout:"cover-split", hue:[196,222], deck:"2025 云南研学方案.pptx", page:1, uses:7 },
+    { id:"p-hl-1", name:"亮点 · 三栏卡片", type:"亮点", layout:"hl-3col", hue:[210,240], deck:"2025 徽州研学方案.pptx", page:3, uses:19 },
+    { id:"p-hl-2", name:"亮点 · 大图叠字", type:"亮点", layout:"hl-hero", hue:[24,40], deck:"2024 景德镇研学方案.pptx", page:4, uses:6 },
+    { id:"p-it-1", name:"行程 · 表格", type:"行程", layout:"it-table", hue:[212,236], deck:"2025 徽州研学方案.pptx", page:6, uses:15 },
+    { id:"p-it-2", name:"行程 · 时间轴", type:"行程", layout:"it-time", hue:[260,300], deck:"2025 云南研学方案.pptx", page:7, uses:4 },
+    { id:"p-sum-1", name:"汇总 · 四宫格数据", type:"汇总", layout:"sum-stats", hue:[150,190], deck:"2025 徽州研学方案.pptx", page:9, uses:11 },
+    { id:"p-note-1", name:"须知 · 双栏清单", type:"须知", layout:"note-2col", hue:[16,30], deck:"2024 景德镇研学方案.pptx", page:11, uses:3 }
+  ],
+  decks: [
+    { id:"tpl-cover", name:"封面模板", desc:"方案首页，标题+副标题+主题标签", pages:["p-cover-1"] },
+    { id:"tpl-hl", name:"行程亮点模板", desc:"三个亮点卡片，一页讲透产品价值", pages:["p-hl-1"] },
+    { id:"tpl-sum", name:"研学行程汇总模板", desc:"逐日行程表 + 关键数据概览", pages:["p-it-1","p-sum-1"] },
+    { id:"tpl-full", name:"完整方案模板", desc:"封面 + 亮点 + 行程 + 汇总 + 须知", pages:["p-cover-1","p-hl-1","p-hl-2","p-it-1","p-sum-1","p-note-1"] }
+  ],
+  gallery: [
+    { id:"g1", name:"徽派马头墙", tags:["徽州","建筑","户外"], hue:[200,12], ratio:"4:3", from:"2025 徽州方案 P2" },
+    { id:"g2", name:"徽墨描金工坊", tags:["非遗","人物","室内"], hue:[28,4], ratio:"4:3", from:"2025 徽州方案 P5" },
+    { id:"g3", name:"学生写生", tags:["人物","户外","研学"], hue:[190,150], ratio:"3:2", from:"2025 徽州方案 P8" },
+    { id:"g4", name:"古村航拍", tags:["户外","风景"], hue:[205,225], ratio:"16:9", from:"2024 景德镇方案 P3" },
+    { id:"g5", name:"窑址考察", tags:["室内","非遗"], hue:[16,32], ratio:"4:3", from:"2024 景德镇方案 P6" },
+    { id:"g6", name:"茶山晨雾", tags:["风景","户外"], hue:[150,180], ratio:"16:9", from:"2025 云南方案 P2" },
+    { id:"g7", name:"结营合影", tags:["人物","合影"], hue:[262,300], ratio:"3:2", from:"2025 云南方案 P10" },
+    { id:"g8", name:"课程讲义特写", tags:["室内","物料"], hue:[36,54], ratio:"4:3", from:"2025 徽州方案 P11" }
+  ],
+  workDecks: [
+    { id:"d1", title:"2026 春季 · 徽州研学营", meta:"6 页 · 今天 09:20", hue:[222,262], status:"已完成" },
+    { id:"d2", title:"2026 暑期 · 景德镇非遗营", meta:"8 页 · 昨天", hue:[16,36], status:"已完成" },
+    { id:"d3", title:"2025 秋 · 云南自然营", meta:"6 页 · 10 月 28 日", hue:[150,190], status:"待补图" }
+  ]
+};
+
+const CONTENT_SAMPLE = {
+  cover:{ title:"2026 春季 · 徽州研学营", subtitle:"4 天 3 晚 · 初二语文与历史跨学科实践", tag:"徽州文化 · 非遗体验" },
+  highlights:[
+    { title:"徽墨描金", text:"走进百年墨庄，亲手完成一块描金徽墨，理解文房四宝背后的工艺逻辑。" },
+    { title:"古村测绘", text:"以小组为单位完成马头墙结构与街巷肌理测绘，输出一张手绘图纸。" },
+    { title:"家书写作", text:"夜课结合《送东阳马生序》，完成一封家书并现场朗读。" }
+  ],
+  itinerary:[
+    { day:"D1", route:"合肥 → 屯溪", detail:"开营仪式 · 徽文化导论" },
+    { day:"D2", route:"宏村 · 西递", detail:"古村测绘 · 写生采风" },
+    { day:"D3", route:"歙县墨厂", detail:"徽墨描金 · 非遗工坊" },
+    { day:"D4", route:"返程", detail:"成果展示 · 结营仪式" }
+  ],
+  summary:[
+    { value:"4", unit:"天", label:"行程天数" },
+    { value:"3", unit:"项", label:"核心课程" },
+    { value:"1:8", unit:"", label:"师生配比" },
+    { value:"32", unit:"人", label:"成营规模" }
+  ],
+  note:[
+    "费用含交通、住宿、课程物料与保险",
+    "每 8 名学生配备 1 名带队老师",
+    "出发前 7 天提供行前手册"
+  ]
+};
+
+/* =========================================================
+   状态
+   ========================================================= */
+const state = {
+  view:"home",
+  filter:"全部",
+  activeDeck:"tpl-full",
+  wizard:{ step:1, deckId:"tpl-full", content:null, images:{} },
+  deck:null,
+  selected:0,
+  editingField:null
+};
+
+const CHECK_BUDGET = {
+  "cover.title": 26, "cover.subtitle": 34, "cover.tag": 16,
+  "hl.title": 10, "hl.text": 62,
+  "it.route": 14, "it.detail": 20,
+  "sum.label": 8, "note.item": 24
+};
+
+/* =========================================================
+   工具
+   ========================================================= */
+const $ = (sel, root) => (root || document).querySelector(sel);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const grad = (h1, h2, a) => "linear-gradient(135deg, hsl(" + h1 + " 62% 42%) 0%, hsl(" + h2 + " 58% 30%) 100%)";
+const softGrad = (h1, h2) => "linear-gradient(135deg, hsl(" + h1 + " 70% 92%) 0%, hsl(" + h2 + " 65% 84%) 100%)";
+
+function toast(msg, kind){
+  const t = document.createElement("div");
+  t.className = "toast";
+  if (kind === "warn") t.style.borderLeftColor = "var(--warn)";
+  t.textContent = msg;
+  $("#toasts").appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+function pageById(id){ return DB.pages.find((p) => p.id === id); }
+function deckById(id){ return DB.decks.find((d) => d.id === id); }
+function galleryById(id){ return DB.gallery.find((g) => g.id === id); }
+
+/* 图片槽位决策：手动 > 图库 > 待配图（key 形如 "p-hl-1:0"） */
+function decisionFor(key){
+  const decided = state.wizard.images[key];
+  if (decided) return decided;
+  const idx = Number(String(key).split(":")[1] || 0);
+  return { source:"gallery", galleryId: DB.gallery[idx % DB.gallery.length].id };
+}
+
+function imageLabel(dec){
+  if (!dec) return "待配图";
+  if (dec.source === "manual") return "手动指定";
+  if (dec.source === "gallery") return "图库命中";
+  return "待配图";
+}
+
+/* =========================================================
+   幻灯片渲染
+   ========================================================= */
+function slideHTML(page, c, opts){
+  const o = opts || {};
+  const img = (key, h) => {
+    const dec = decisionFor(key);
+    if (!dec || dec.source === "todo") {
+      return '<div class="img-ph" style="height:' + h + 'px;background:repeating-linear-gradient(45deg,#e8ebf1,#e8ebf1 12px,#f2f4f8 12px,#f2f4f8 24px)"><span class="warn-dot">待配图</span></div>';
+    }
+    const g = galleryById(dec.galleryId) || DB.gallery[0];
+    return '<div class="img-ph" style="height:' + h + 'px;background:' + grad(g.hue[0], g.hue[1]) + '"><span class="lbl">' + esc(imageLabel(dec)) + " · " + esc(g.name) + "</span></div>";
+  };
+
+  if (page.layout === "cover-full"){
+    return '<div class="slide"><div class="pad" style="background:' + grad(page.hue[0], page.hue[1]) + ';color:#fff;justify-content:flex-end">'
+      + '<div class="brandline" style="color:rgba(255,255,255,.72);margin-bottom:auto">YANXUE · PROPOSAL 2026</div>'
+      + '<span class="cover-tag">' + esc(c.cover.tag) + "</span>"
+      + '<h1 class="cover-h" style="color:#fff;margin:26px 0 0">' + esc(c.cover.title) + "</h1>"
+      + '<p class="cover-p" style="color:rgba(255,255,255,.82)">' + esc(c.cover.subtitle) + "</p>"
+      + '<div class="foot" style="color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.2)"><span>方案提报 · 内部预览</span><span>01</span></div>'
+      + "</div></div>";
+  }
+
+  if (page.layout === "cover-split"){
+    return '<div class="slide"><div style="display:grid;grid-template-columns:1fr 1fr;height:100%">'
+      + '<div class="pad" style="justify-content:center">'
+      + '<span class="cover-tag" style="background:#eef2fb;color:#3b5b9a">' + esc(c.cover.tag) + "</span>"
+      + '<h1 class="cover-h" style="font-size:52px;margin:22px 0 0">' + esc(c.cover.title) + "</h1>"
+      + '<p class="cover-p" style="font-size:20px">' + esc(c.cover.subtitle) + "</p></div>"
+      + '<div style="height:720px">' + img(page.id + ":0", 720) + '</div>'
+      + "</div></div>";
+  }
+
+  if (page.layout === "hl-3col"){
+    const cards = c.highlights.map((h, i) => '<div class="hl-card">'
+      + '<div class="hl-num" style="background:' + grad(page.hue[0], page.hue[1]) + '">0' + (i + 1) + "</div>"
+      + '<div class="hl-title">' + esc(h.title) + "</div>"
+      + '<div class="hl-text">' + esc(h.text) + "</div>"
+      + img(page.id + ":" + i, 112)
+      + "</div>").join("");
+    return '<div class="slide"><div class="pad">'
+      + '<h2 class="slide-h2">行程亮点</h2><div class="slide-sub">三个可被记住的瞬间</div>'
+      + '<div class="hl-grid">' + cards + "</div>"
+      + '<div class="foot"><span>徽州研学营 · 方案提报</span><span>0' + (o.index != null ? o.index + 1 : 2) + "</span></div>"
+      + "</div></div>";
+  }
+
+  if (page.layout === "hl-hero"){
+    const h = c.highlights[0] || { title:"", text:"" };
+    return '<div class="slide"><div style="display:grid;grid-template-columns:1.1fr .9fr;height:100%">'
+      + '<div style="height:720px">' + img(page.id + ":0", 720) + '</div>'
+      + '<div class="pad" style="justify-content:center">'
+      + '<div class="hl-num" style="background:' + grad(page.hue[0], page.hue[1]) + '">01</div>'
+      + '<h2 class="slide-h2" style="font-size:44px;margin-top:22px">' + esc(h.title) + "</h2>"
+      + '<p style="font-size:19px;line-height:1.8;color:#5b6678">' + esc(h.text) + "</p></div>"
+      + "</div></div>";
+  }
+
+  if (page.layout === "it-table"){
+    const rows = c.itinerary.map((r) => "<tr>"
+      + '<td class="day">' + esc(r.day) + "</td>"
+      + "<td><b>" + esc(r.route) + "</b></td>"
+      + "<td>" + esc(r.detail) + "</td></tr>").join("");
+    return '<div class="slide"><div class="pad">'
+      + '<h2 class="slide-h2">研学行程汇总</h2><div class="slide-sub">4 天 3 晚 · 逐日安排</div>'
+      + '<table class="tbl"><thead><tr><th style="width:90px">日程</th><th style="width:220px">行程</th><th>内容</th></tr></thead><tbody>' + rows + "</tbody></table>"
+      + '<div class="foot"><span>徽州研学营 · 方案提报</span><span>0' + (o.index != null ? o.index + 1 : 4) + "</span></div>"
+      + "</div></div>";
+  }
+
+  if (page.layout === "it-time"){
+    const rows = c.itinerary.map((r) => '<div style="display:grid;grid-template-columns:64px 1fr;gap:16px;padding:14px 0;border-bottom:1px solid #e7ebf2">'
+      + '<div style="font-weight:700;color:#2b6cff">' + esc(r.day) + "</div>"
+      + "<div><b>" + esc(r.route) + "</b><div style=\"color:#6b7688;font-size:16px\">" + esc(r.detail) + "</div></div></div>").join("");
+    return '<div class="slide"><div class="pad"><h2 class="slide-h2">行程时间轴</h2><div class="slide-sub">按天推进的课程节奏</div>' + rows + "</div></div>";
+  }
+
+  if (page.layout === "sum-stats"){
+    const boxes = c.summary.map((s) => '<div class="stat-box">'
+      + '<div class="stat-v" style="color:hsl(' + page.hue[0] + ' 55% 40%)">' + esc(s.value) + '<span style="font-size:22px">' + esc(s.unit) + "</span></div>"
+      + '<div class="stat-k">' + esc(s.label) + "</div></div>").join("");
+    return '<div class="slide"><div class="pad">'
+      + '<h2 class="slide-h2">关键数据</h2><div class="slide-sub">一眼看清方案规模</div>'
+      + '<div class="stat-grid">' + boxes + "</div>"
+      + '<div class="foot"><span>徽州研学营 · 方案提报</span><span>0' + (o.index != null ? o.index + 1 : 5) + "</span></div>"
+      + "</div></div>";
+  }
+
+  const items = c.note.map((n) => '<li style="font-size:19px;line-height:2;color:#4b5668">' + esc(n) + "</li>").join("");
+  return '<div class="slide"><div class="pad">'
+    + '<h2 class="slide-h2">报名须知</h2><div class="slide-sub">费用与服务说明</div>'
+    + '<ul style="margin:0;padding-left:22px">' + items + "</ul>"
+    + '<div class="foot"><span>徽州研学营 · 方案提报</span><span>06</span></div>'
+    + "</div></div>";
+}
+
+/* 缩略图缩放：等比缩放到容器宽度 */
+function fitOne(stage){
+  const slide = stage.querySelector(".slide");
+  if (!slide) return;
+  const scale = stage.clientWidth / 1280;
+  slide.style.transform = "scale(" + scale + ")";
+  stage.style.height = (720 * scale) + "px";
+}
+function fitSlides(root){
+  (root || document).querySelectorAll(".stage").forEach(fitOne);
+}
+window.addEventListener("resize", () => fitSlides());
+
+/* =========================================================
+   视图：工作台
+   ========================================================= */
+function viewHome(){
+  const cards = DB.workDecks.map((d) => '<div class="deck-card" data-open="' + d.id + '">'
+    + '<div class="deck-cover" style="background:' + grad(d.hue[0], d.hue[1]) + '">'
+    + '<div style="position:absolute;inset:0;display:flex;align-items:flex-end;padding:12px">'
+    + '<span class="tag ' + (d.status === "已完成" ? "ok" : "warn") + '">' + esc(d.status) + "</span></div></div>"
+    + '<div class="deck-body"><div class="deck-title">' + esc(d.title) + '</div><div class="sub">' + esc(d.meta) + "</div></div></div>").join("");
+
+  return '<div class="top"><div><h1>工作台</h1><div class="sub">从模板生成方案，或继续编辑已有方案</div></div>'
+    + '<div class="row"><button class="btn" data-act="parse">解析历史方案</button>'
+    + '<button class="btn primary" data-act="new">+ 新建方案</button></div></div>'
+    + '<div class="stats">'
+    + '<div class="card"><div class="stat-num">' + DB.pages.length + '</div><div class="stat-label">模板页</div></div>'
+    + '<div class="card"><div class="stat-num">' + DB.decks.length + '</div><div class="stat-label">方案模板</div></div>'
+    + '<div class="card"><div class="stat-num">' + DB.gallery.length + '</div><div class="stat-label">图库图片（示例）</div></div>'
+    + '<div class="card"><div class="stat-num">' + DB.workDecks.length + '</div><div class="stat-label">本周生成</div></div>'
+    + "</div>"
+    + '<h1 style="font-size:15px;margin-bottom:12px">最近方案</h1>'
+    + '<div class="deck-grid">' + cards + "</div>";
+}
+
+/* =========================================================
+   视图：模板库
+   ========================================================= */
+function viewLibrary(){
+  const types = ["全部", "封面", "亮点", "行程", "汇总", "须知"];
+  const chips = types.map((t) => '<button class="chip ' + (state.filter === t ? "on" : "") + '" data-filter="' + t + '">' + t + "</button>").join("");
+  const list = DB.pages.filter((p) => state.filter === "全部" || p.type === state.filter);
+  const cards = list.map((p) => {
+    const html = slideHTML(p, CONTENT_SAMPLE, { index:p.page - 1 });
+    return '<div class="tpl-card">'
+      + '<div class="stage" data-stage>' + html + "</div>"
+      + '<div class="tpl-meta"><div><div class="tpl-name">' + esc(p.name) + '</div>'
+      + '<div class="sub" style="font-size:11.5px">' + esc(p.type) + " · 引用 " + p.uses + " 次</div></div>"
+      + '<span class="tag">' + esc(p.deck.replace(".pptx", "")) + "</span></div></div>";
+  }).join("");
+
+  return '<div class="top"><div><h1>模板库</h1><div class="sub">从历史方案解析出的版式页，清空内容后沉淀为模板页</div></div>'
+    + '<div class="row"><button class="btn" data-act="parse">+ 解析历史方案</button></div></div>'
+    + '<div class="filters">' + chips + "</div>"
+    + (cards ? '<div class="tpl-grid">' + cards + "</div>" : '<div class="empty">该类型下暂无模板页</div>');
+}
+
+/* =========================================================
+   视图：方案模板
+   ========================================================= */
+function viewDecks(){
+  const list = DB.decks.map((d) => '<div class="list-item ' + (d.id === state.activeDeck ? "on" : "") + '" data-deck="' + d.id + '">'
+    + '<div><div style="font-size:13px;font-weight:600">' + esc(d.name) + '</div>'
+    + '<div class="sub" style="font-size:11.5px">' + d.pages.length + " 页</div></div>"
+    + '<span class="tag">' + d.pages.length + "</span></div>").join("");
+
+  const d = deckById(state.activeDeck);
+  const rows = d.pages.map((pid, i) => {
+    const p = pageById(pid);
+    const thumb = slideHTML(p, CONTENT_SAMPLE, { index:i });
+    return '<div class="seq-row"><div class="seq-idx">' + (i + 1) + "</div>"
+      + '<div class="thumb-wrap" data-stage>' + thumb + "</div>"
+      + '<div><div style="font-size:13px;font-weight:600">' + esc(p.name) + "</div>"
+      + '<div class="sub" style="font-size:11.5px">' + esc(p.type) + " · 来源 " + esc(p.deck) + "</div></div>"
+      + '<div class="row"><button class="icon-btn" data-move="up" data-idx="' + i + '" title="上移">↑</button>'
+      + '<button class="icon-btn" data-move="down" data-idx="' + i + '" title="下移">↓</button>'
+      + '<button class="icon-btn" data-move="del" data-idx="' + i + '" title="移除">✕</button></div></div>';
+  }).join("");
+
+  const picker = DB.pages.map((p) => '<option value="' + p.id + '">' + esc(p.type + " · " + p.name) + "</option>").join("");
+
+  return '<div class="top"><div><h1>方案模板</h1><div class="sub">把模板页按顺序组合成方案模板，排版时按文案填充</div></div>'
+    + '<div class="row"><button class="btn" data-act="save-deck">保存模板</button>'
+    + '<button class="btn primary" data-act="new">用此模板新建方案</button></div></div>'
+    + '<div class="split"><div class="card"><div class="sub" style="margin-bottom:10px">方案模板列表</div><div style="display:flex;flex-direction:column;gap:4px">' + list + "</div></div>"
+    + '<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:12px">'
+    + '<div><b style="font-size:13.5px">' + esc(d.name) + '</b><div class="sub" style="font-size:12px">' + esc(d.desc) + "</div></div>"
+    + '<div class="row"><select id="add-page" style="width:200px">' + picker + "</select>"
+    + '<button class="btn sm" data-act="add-page">添加页</button></div></div>'
+    + (rows ? '<div class="seq">' + rows + "</div>" : '<div class="empty">还没有模板页，从上面选择添加</div>')
+    + "</div></div>";
+}
+
+/* =========================================================
+   视图：图库
+   ========================================================= */
+function viewGallery(){
+  const cards = DB.gallery.map((g) => '<div class="card" style="padding:0;overflow:hidden">'
+    + '<div style="aspect-ratio:' + (g.ratio === "16:9" ? "16/9" : g.ratio === "3:2" ? "3/2" : "4/3") + ';background:' + grad(g.hue[0], g.hue[1]) + '"></div>'
+    + '<div style="padding:10px 12px"><div style="font-size:13px;font-weight:600">' + esc(g.name) + '</div>'
+    + '<div class="sub" style="font-size:11.5px">' + esc(g.from) + "</div>"
+    + '<div class="row" style="margin-top:8px">' + g.tags.map((t) => '<span class="tag">' + esc(t) + "</span>").join("") + "</div></div></div>").join("");
+
+  return '<div class="top"><div><h1>图库</h1><div class="sub">从历史方案抽取的图片，带来源、比例与标签，供自动配图检索</div></div>'
+    + '<div class="row"><button class="btn" data-act="parse">+ 从方案导入图片</button></div></div>'
+    + '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">' + cards + "</div>";
+}
+
+/* =========================================================
+   视图：向导
+   ========================================================= */
+function viewWizard(){
+  const w = state.wizard;
+  const steps = ["选择方案模板", "填写文案", "配图与生成"];
+  const stepper = steps.map((s, i) => {
+    const n = i + 1;
+    const cls = w.step === n ? "on" : w.step > n ? "done" : "";
+    return '<div class="step ' + cls + '"><span class="n">' + (w.step > n ? "✓" : n) + "</span>" + s + "</div>"
+      + (i < steps.length - 1 ? '<div class="step-line"></div>' : "");
+  }).join("");
+
+  let body = "";
+  if (w.step === 1){
+    const cards = DB.decks.map((d) => '<div class="tpl-card" data-pick="' + d.id + '" style="cursor:pointer;border-color:' + (w.deckId === d.id ? "#3a6bd0" : "var(--line)") + '">'
+      + '<div class="stage" data-stage>' + slideHTML(pageById(d.pages[0]), CONTENT_SAMPLE, { index:0 }) + "</div>"
+      + '<div class="tpl-meta"><div><div class="tpl-name">' + esc(d.name) + '</div><div class="sub" style="font-size:11.5px">' + d.pages.length + " 页 · " + esc(d.desc) + "</div></div>"
+      + (w.deckId === d.id ? '<span class="tag ok">已选</span>' : "") + "</div></div>").join("");
+    body = '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">' + cards + "</div>";
+  }
+
+  if (w.step === 2){
+    const c = w.content || CONTENT_SAMPLE;
+    const hl = c.highlights.map((h, i) => '<div class="field"><label>亮点 ' + (i + 1) + " 标题</label>"
+      + '<input type="text" data-bind="hl-title-' + i + '" value="' + esc(h.title) + '">'
+      + '<div class="hint">正文</div><textarea data-bind="hl-text-' + i + '">' + esc(h.text) + "</textarea></div>").join("");
+    const it = c.itinerary.map((r, i) => '<tr>'
+      + '<td><input type="text" data-bind="it-day-' + i + '" value="' + esc(r.day) + '" style="width:52px"></td>'
+      + '<td><input type="text" data-bind="it-route-' + i + '" value="' + esc(r.route) + '"></td>'
+      + '<td><input type="text" data-bind="it-detail-' + i + '" value="' + esc(r.detail) + '"></td></tr>').join("");
+    body = '<div class="two"><div class="card">'
+      + '<h3 style="margin:0 0 12px;font-size:13px">封面文案</h3>'
+      + '<div class="field"><label>标题</label><input type="text" data-bind="cover-title" value="' + esc(c.cover.title) + '"></div>'
+      + '<div class="field"><label>副标题</label><input type="text" data-bind="cover-subtitle" value="' + esc(c.cover.subtitle) + '"></div>'
+      + '<div class="field"><label>主题标签</label><input type="text" data-bind="cover-tag" value="' + esc(c.cover.tag) + '"></div>'
+      + '<button class="btn sm" data-act="load-sample">载入示例文案</button></div>'
+      + '<div class="card"><h3 style="margin:0 0 12px;font-size:13px">行程安排</h3>'
+      + '<table class="tbl" style="font-size:12px"><tbody>' + it + "</tbody></table>"
+      + '<div class="hint">演示版仅提供 4 天行程字段</div></div></div>'
+      + '<div class="card" style="margin-top:12px"><h3 style="margin:0 0 12px;font-size:13px">行程亮点</h3><div class="three">' + hl + "</div></div>";
+  }
+
+  if (w.step === 3){
+    const d = deckById(w.deckId);
+    const slots = [];
+    d.pages.forEach((pid) => {
+      const p = pageById(pid);
+      if (p.layout === "cover-full" || p.layout === "cover-split") slots.push({ page:p, n:1 });
+      if (p.layout === "hl-3col") slots.push({ page:p, n:3 });
+    });
+    const rows = slots.map((s) => {
+      const cells = [];
+      for (let i = 0; i < s.n; i++){
+        const dec = decisionFor(s.page.id + ":" + i);
+        const g = dec && dec.galleryId ? galleryById(dec.galleryId) : null;
+        cells.push('<div class="img-swatch" style="background:' + (g ? grad(g.hue[0], g.hue[1]) : "repeating-linear-gradient(45deg,#e8ebf1,#e8ebf1 10px,#f2f4f8 10px,#f2f4f8 20px)") + '"></div>');
+      }
+      return '<div class="kv"><span>' + esc(s.page.name) + " · " + s.n + " 图</span>"
+        + '<span class="row">' + cells.join("") + '<span class="tag ok">图库命中</span></span></div>';
+    }).join("");
+
+    body = '<div class="two"><div class="card"><h3 style="margin:0 0 10px;font-size:13px">配图策略</h3>'
+      + '<div class="hint" style="margin-bottom:12px">优先级：手动指定 &gt; 图库命中 &gt; 待配图清单（网络图源为后续版本）</div>'
+      + rows + "</div>"
+      + '<div class="card"><h3 style="margin:0 0 10px;font-size:13px">生成预览</h3>'
+      + '<div class="log" id="gen-log">等待开始…</div><div class="pbar"><i id="gen-bar"></i></div>'
+      + '<button class="btn primary" data-act="generate" style="margin-top:14px;width:100%">生成方案</button></div></div>';
+  }
+
+  return '<div class="top"><div><h1>新建方案</h1><div class="sub">选择模板 → 填写文案 → 配图生成</div></div>'
+    + '<div class="row"><button class="btn ghost" data-act="back">返回</button></div></div>'
+    + '<div class="stepper">' + stepper + "</div>" + body
+    + '<div class="row" style="margin-top:18px;justify-content:flex-end">'
+    + (w.step > 1 ? '<button class="btn" data-act="prev">上一步</button>' : "")
+    + (w.step < 3 ? '<button class="btn primary" data-act="next">下一步</button>' : "")
+    + "</div>";
+}
+
+/* =========================================================
+   视图：预览与编辑
+   ========================================================= */
+function issuesHTML(cur){
+  return cur.issues.length
+    ? cur.issues.map((x) => '<div class="issue"><span class="tag ' + (x.level === "warn" ? "warn" : "bad") + '">' + (x.level === "warn" ? "提示" : "阻塞") + "</span><span>" + esc(x.text) + "</span></div>").join("")
+    : '<div class="issue"><span class="tag ok">通过</span><span>该页无问题</span></div>';
+}
+
+function viewPreview(){
+  const deck = state.deck;
+  if (!deck) return '<div class="empty">还没有生成的方案</div>';
+  const items = deck.pages.map((it, i) => {
+    const cls = i === state.selected ? "on" : "";
+    const warn = it.hasIssue ? '<span class="dot"></span>' : "";
+    return '<button class="thumb-btn ' + cls + '" data-page="' + i + '"><span class="num">' + (i + 1) + "</span>" + warn + '<span class="thumb-wrap">' + it.html + "</span></button>";
+  }).join("");
+
+  const cur = deck.pages[state.selected];
+  const issues = issuesHTML(cur);
+
+  const fields = cur.fields.map((f) => {
+    const over = f.len > f.budget;
+    return '<div class="field" style="margin-bottom:10px"><label>' + esc(f.label)
+      + ' <span class="cnt" data-cnt="' + esc(f.key) + '" style="float:right;color:' + (over ? "var(--danger)" : "var(--muted)") + '">' + f.len + "/" + f.budget + "</span></label>"
+      + '<textarea data-field="' + esc(f.key) + '" style="min-height:' + (f.multiline ? 60 : 0) + "px;height:" + (f.multiline ? 60 : 36) + "px;overflow:" + (f.multiline ? "auto" : "hidden") + '">' + esc(f.value) + "</textarea></div>";
+  }).join("");
+
+  const picks = cur.slots.map((s) => {
+    const opts = DB.gallery.slice(0, 3).map((g) => '<button class="img-swatch" data-slot="' + esc(s.key) + '" data-gid="' + g.id + '" title="' + esc(g.name) + '" style="background:' + grad(g.hue[0], g.hue[1]) + ';border-color:' + (s.galleryId === g.id ? "#4f8cff" : "transparent") + '"></button>').join("");
+    return '<div style="margin-bottom:10px"><div class="sub" style="margin-bottom:6px">' + esc(s.label) + ' <span class="tag ' + (s.source === "todo" ? "warn" : "ok") + '">' + esc(imageLabel(s)) + "</span></div>"
+      + '<div class="img-pick">' + opts + '<button class="img-swatch" data-slot="' + esc(s.key) + '" data-gid="" style="background:#1a1f28;border:1px dashed #39445a;color:var(--muted);font-size:11px">手动</button></div></div>';
+  }).join("");
+
+  return '<div class="top"><div><h1>方案预览</h1><div class="sub">' + esc(deck.title) + " · " + deck.pages.length + ' 页 · 自动排版结果</div></div>'
+    + '<div class="row"><button class="btn ghost" data-act="home">返回工作台</button><button class="btn primary" data-act="export">导出 pptx</button></div></div>'
+    + '<div class="preview"><div class="thumbs">' + items + "</div>"
+    + '<div><div class="panel" style="padding:10px"><div class="stage" id="stage-main">' + cur.html + "</div></div>"
+    + '<div class="row" style="margin-top:10px;justify-content:space-between"><div class="sub">第 ' + (state.selected + 1) + " / " + deck.pages.length + ' 页 · ' + esc(cur.page.name) + '</div>'
+    + '<div class="row"><button class="btn sm" data-nav="prev">上一页</button><button class="btn sm" data-nav="next">下一页</button></div></div></div>'
+    + '<div><div class="panel" id="issues-panel" style="margin-bottom:12px"><h3>问题检查</h3>' + issues + "</div>"
+    + '<div class="panel" style="margin-bottom:12px"><h3>文案字段（可编辑）</h3>' + fields + "</div>"
+    + '<div class="panel"><h3>图片槽位</h3>' + (picks || '<div class="sub">该页无图片槽位</div>') + "</div></div></div>";
+}
+
+/* =========================================================
+   渲染与路由
+   ========================================================= */
+function render(){
+  const views = { home:viewHome, library:viewLibrary, decks:viewDecks, gallery:viewGallery, wizard:viewWizard, preview:viewPreview };
+  $("#main").innerHTML = (views[state.view] || viewHome)();
+  document.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("on", b.dataset.view === state.view));
+  fitSlides(document);
+}
+
+function go(view){
+  state.view = view;
+  render();
+  window.scrollTo(0, 0);
+  if (history.replaceState) history.replaceState(null, "", "#" + view);
+}
+
+/* 支持 #library / #preview 等深链，便于演示直接跳到某个界面 */
+function bootFromHash(){
+  const raw = (location.hash || "").replace("#", "");
+  if (!raw) return false;
+  const pm = raw.match(/^preview(?:-(\d+))?$/);
+  const h = pm ? "preview" : raw;
+  if (h === "preview" && !state.deck){
+    state.deck = buildDeck("tpl-full", JSON.parse(JSON.stringify(CONTENT_SAMPLE)));
+    state.selected = 0;
+  }
+  if (pm && pm[1]) state.selected = Number(pm[1]);
+  if (h === "wizard"){
+    state.wizard = { step:2, deckId:"tpl-full", content: JSON.parse(JSON.stringify(CONTENT_SAMPLE)), images:{} };
+  }
+  if (["home","library","decks","gallery","wizard","preview"].indexOf(h) >= 0){ go(h); return true; }
+  return false;
+}
+
+/* =========================================================
+   生成逻辑（模拟）
+   ========================================================= */
+function buildDeck(deckId, content){
+  const d = deckById(deckId);
+  const pages = d.pages.map((pid, i) => {
+    const page = pageById(pid);
+    const fields = [];
+    const issues = [];
+    const slots = [];
+
+    if (page.layout.indexOf("cover") === 0){
+      fields.push({ key:"title", label:"封面标题", value:content.cover.title, len:content.cover.title.length, budget:CHECK_BUDGET["cover.title"], multiline:false });
+      fields.push({ key:"subtitle", label:"副标题", value:content.cover.subtitle, len:content.cover.subtitle.length, budget:CHECK_BUDGET["cover.subtitle"], multiline:false });
+      const dc0 = decisionFor(page.id + ":0");
+      slots.push({ key:page.id + ":0", label:"封面主图", source:dc0.source, galleryId:dc0.galleryId || null });
+    }
+    if (page.layout === "hl-3col"){
+      content.highlights.forEach((h, hi) => {
+        fields.push({ key:"hl" + hi + ".title", label:"亮点 " + (hi + 1) + " 标题", value:h.title, len:h.title.length, budget:CHECK_BUDGET["hl.title"], multiline:false });
+        fields.push({ key:"hl" + hi + ".text", label:"亮点 " + (hi + 1) + " 正文", value:h.text, len:h.text.length, budget:CHECK_BUDGET["hl.text"], multiline:true });
+        const dch = decisionFor(page.id + ":" + hi);
+        slots.push({ key:page.id + ":" + hi, label:"亮点 " + (hi + 1) + " 配图", source:dch.source, galleryId:dch.galleryId || null });
+      });
+    }
+    if (page.layout === "it-table"){
+      content.itinerary.forEach((r, ri) => {
+        fields.push({ key:"it" + ri + ".route", label:"D" + (ri + 1) + " 行程", value:r.route, len:r.route.length, budget:CHECK_BUDGET["it.route"], multiline:false });
+      });
+    }
+    if (page.layout === "sum-stats"){
+      content.summary.forEach((s, si) => {
+        fields.push({ key:"sum" + si + ".label", label:"指标 " + (si + 1), value:s.label, len:s.label.length, budget:CHECK_BUDGET["sum.label"], multiline:false });
+      });
+    }
+    if (page.layout === "note-2col"){
+      content.note.forEach((n, ni) => {
+        fields.push({ key:"note" + ni, label:"须知 " + (ni + 1), value:n, len:n.length, budget:CHECK_BUDGET["note.item"], multiline:false });
+      });
+    }
+
+    fields.forEach((f) => {
+      if (f.len > f.budget) issues.push({ level:"warn", text:"「" + f.label + "」超出字数预算 " + f.len + "/" + f.budget + "，将触发字号阶梯缩小" });
+    });
+    if (slots.some((s) => s.source === "todo")) issues.push({ level:"warn", text:"存在待配图槽位，已用占位色块替代" });
+
+    return {
+      page:page, index:i, fields:fields, issues:issues, slots:slots,
+      hasIssue:issues.length > 0,
+      html:slideHTML(page, content, { index:i }),
+      content:content
+    };
+  });
+  return { title:content.cover.title, pages:pages };
+}
+
+function generate(){
+  const w = state.wizard;
+  const steps = ["载入方案模板", "绑定文案字段", "检索图库图片", "处理文本溢出", "渲染预览"];
+  const bar = $("#gen-bar");
+  const log = $("#gen-log");
+  if (!bar) return;
+  let i = 0;
+  const tick = () => {
+    if (i < steps.length){
+      log.textContent = "▸ " + steps[i];
+      bar.style.width = Math.round(((i + 1) / steps.length) * 100) + "%";
+      i++;
+      setTimeout(tick, 420);
+    } else {
+      log.textContent = "✔ 生成完成";
+      state.deck = buildDeck(w.deckId, w.content || CONTENT_SAMPLE);
+      state.selected = 0;
+      toast("方案生成完成，共 " + state.deck.pages.length + " 页");
+      setTimeout(() => go("preview"), 320);
+    }
+  };
+  tick();
+}
+
+/* =========================================================
+   事件
+   ========================================================= */
+document.addEventListener("click", (e) => {
+  const nav = e.target.closest(".nav-item");
+  if (nav){ go(nav.dataset.view); return; }
+
+  const chip = e.target.closest("[data-filter]");
+  if (chip){ state.filter = chip.dataset.filter; render(); return; }
+
+  const deckItem = e.target.closest("[data-deck]");
+  if (deckItem){ state.activeDeck = deckItem.dataset.deck; render(); return; }
+
+  const pick = e.target.closest("[data-pick]");
+  if (pick){ state.wizard.deckId = pick.dataset.pick; render(); return; }
+
+  const moveBtn = e.target.closest("[data-move]");
+  if (moveBtn){
+    const d = deckById(state.activeDeck);
+    const idx = Number(moveBtn.dataset.idx);
+    const op = moveBtn.dataset.move;
+    if (op === "del"){ d.pages.splice(idx, 1); }
+    if (op === "up" && idx > 0){ const t = d.pages[idx - 1]; d.pages[idx - 1] = d.pages[idx]; d.pages[idx] = t; }
+    if (op === "down" && idx < d.pages.length - 1){ const t = d.pages[idx + 1]; d.pages[idx + 1] = d.pages[idx]; d.pages[idx] = t; }
+    render(); toast("已更新页序");
+    return;
+  }
+
+  const openCard = e.target.closest("[data-open]");
+  if (openCard){
+    state.deck = buildDeck("tpl-full", CONTENT_SAMPLE);
+    state.selected = 0;
+    go("preview");
+    return;
+  }
+
+  const pageBtn = e.target.closest("[data-page]");
+  if (pageBtn){ state.selected = Number(pageBtn.dataset.page); render(); return; }
+
+  const navBtn = e.target.closest("[data-nav]");
+  if (navBtn && state.deck){
+    const n = state.deck.pages.length;
+    state.selected = navBtn.dataset.nav === "next" ? Math.min(n - 1, state.selected + 1) : Math.max(0, state.selected - 1);
+    render(); return;
+  }
+
+  const slotBtn = e.target.closest("[data-slot]");
+  if (slotBtn && state.deck){
+    const slot = slotBtn.dataset.slot;
+    const gid = slotBtn.dataset.gid;
+    state.wizard.images[slot] = gid ? { source:"manual", galleryId:gid } : { source:"todo" };
+    const cur = state.deck.pages[state.selected];
+    const target = cur.slots.find((s) => s.key === slot);
+    if (target){
+      target.source = gid ? "manual" : "todo";
+      target.galleryId = gid || null;
+    }
+    state.deck = buildDeck(state.wizard.deckId, state.wizard.content || CONTENT_SAMPLE);
+    render();
+    toast(gid ? "已指定图片" : "已标记为待配图");
+    return;
+  }
+
+  const act = e.target.closest("[data-act]");
+  if (!act) return;
+  const a = act.dataset.act;
+
+  if (a === "new"){
+    state.wizard = { step:1, deckId: state.view === "decks" ? state.activeDeck : "tpl-full", content:null, images:{} };
+    go("wizard"); return;
+  }
+  if (a === "back" || a === "home"){ go(state.view === "wizard" ? "home" : "home"); return; }
+  if (a === "next"){
+    if (state.wizard.step < 3){ state.wizard.step++; render(); }
+    return;
+  }
+  if (a === "prev"){ state.wizard.step = Math.max(1, state.wizard.step - 1); render(); return; }
+  if (a === "generate"){ generate(); return; }
+
+  if (a === "load-sample"){
+    state.wizard.content = JSON.parse(JSON.stringify(CONTENT_SAMPLE));
+    render(); toast("已载入示例文案"); return;
+  }
+
+  if (a === "add-page"){
+    const sel = $("#add-page");
+    const d = deckById(state.activeDeck);
+    if (sel && sel.value){ d.pages.push(sel.value); render(); toast("已添加模板页"); }
+    return;
+  }
+  if (a === "save-deck"){ toast("方案模板已保存（模拟）"); return; }
+  if (a === "export"){ toast("已导出 pptx（模拟，未生成真实文件）", "warn"); return; }
+  if (a === "parse"){ parseModal(); return; }
+});
+
+document.addEventListener("input", (e) => {
+  const bind = e.target.closest("[data-bind]");
+  if (bind){
+    if (!state.wizard.content) state.wizard.content = JSON.parse(JSON.stringify(CONTENT_SAMPLE));
+    const c = state.wizard.content;
+    const key = bind.dataset.bind;
+    const val = bind.value;
+    const m = key.match(/^(hl|it)-(.+)-(\d+)$/);
+    if (key === "cover-title") c.cover.title = val;
+    else if (key === "cover-subtitle") c.cover.subtitle = val;
+    else if (key === "cover-tag") c.cover.tag = val;
+    else if (m){
+      const idx = Number(m[3]);
+      if (m[1] === "hl"){ if (m[2] === "title") c.highlights[idx].title = val; else c.highlights[idx].text = val; }
+      if (m[1] === "it"){
+        if (m[2] === "day") c.itinerary[idx].day = val;
+        if (m[2] === "route") c.itinerary[idx].route = val;
+        if (m[2] === "detail") c.itinerary[idx].detail = val;
+      }
+    }
+    return;
+  }
+
+  const field = e.target.closest("[data-field]");
+  if (field && state.deck){
+    const cur = state.deck.pages[state.selected];
+    const key = field.dataset.field;
+    const val = field.value;
+    const f = cur.fields.find((x) => x.key === key);
+    if (f){ f.value = val; f.len = val.length; }
+    const c = cur.content;
+    if (key === "title") c.cover.title = val;
+    if (key === "subtitle") c.cover.subtitle = val;
+    const m = key.match(/^hl(\d+)\.(title|text)$/);
+    if (m){ const i = Number(m[1]); c.highlights[i][m[2]] = val; }
+    const n = key.match(/^note(\d+)$/);
+    if (n){ c.note[Number(n[1])] = val; }
+    const s = key.match(/^sum(\d+)\.label$/);
+    if (s){ c.summary[Number(s[1])].label = val; }
+    const it = key.match(/^it(\d+)\.route$/);
+    if (it){ c.itinerary[Number(it[1])].route = val; }
+
+    cur.html = slideHTML(cur.page, c, { index:cur.index });
+    const stage = document.getElementById("stage-main");
+    if (stage){ stage.innerHTML = cur.html; fitOne(stage); }
+    const thumb = document.querySelector('.thumb-btn[data-page="' + cur.index + '"] .thumb-wrap');
+    if (thumb) thumb.innerHTML = cur.html;
+    const cnt = document.querySelector('[data-cnt="' + key + '"]');
+    if (cnt && f){
+      const over = f.len > f.budget;
+      cnt.textContent = f.len + "/" + f.budget;
+      cnt.style.color = over ? "var(--danger)" : "var(--muted)";
+    }
+    cur.issues = [];
+    cur.fields.forEach((x) => {
+      if (x.len > x.budget) cur.issues.push({ level:"warn", text:"「" + x.label + "」超出字数预算 " + x.len + "/" + x.budget + "，将触发字号阶梯缩小" });
+    });
+    if (cur.slots.some((sl) => sl.source === "todo")) cur.issues.push({ level:"warn", text:"存在待配图槽位，已用占位色块替代" });
+    cur.hasIssue = cur.issues.length > 0;
+    const ip = document.getElementById("issues-panel");
+    if (ip) ip.innerHTML = "<h3>问题检查</h3>" + issuesHTML(cur);
+  }
+});
+
+/* 解析历史方案：模拟进度 */
+function parseModal(){
+  const veil = document.createElement("div");
+  veil.className = "veil";
+  veil.innerHTML = '<div class="modal"><h2>解析历史方案</h2>'
+    + '<p>选择一份 .pptx，自动抽取模板页与图片素材（Demo 为模拟过程）</p>'
+    + '<div class="log" id="parse-log">准备中…</div><div class="pbar"><i id="parse-bar"></i></div>'
+    + '<div class="row" style="margin-top:16px;justify-content:flex-end">'
+    + '<button class="btn ghost" data-close>取消</button><button class="btn primary" data-start>开始解析</button></div></div>';
+  document.body.appendChild(veil);
+
+  veil.addEventListener("click", (e) => {
+    if (e.target === veil || e.target.closest("[data-close]")) veil.remove();
+    if (e.target.closest("[data-start]")){
+      const steps = ["读取 pptx 结构", "识别页型（封面/亮点/行程/汇总）", "清空文本，保留形状与配色", "抽取图片并打标签", "写入模板库"];
+      let i = 0;
+      const bar = $("#parse-bar", veil);
+      const log = $("#parse-log", veil);
+      const btn = veil.querySelector("[data-start]");
+      btn.disabled = true;
+      const tick = () => {
+        if (i < steps.length){
+          log.textContent = "▸ " + steps[i];
+          bar.style.width = Math.round(((i + 1) / steps.length) * 100) + "%";
+          i++;
+          setTimeout(tick, 400);
+        } else {
+          log.textContent = "✔ 完成，新增 2 个模板页、6 张图片";
+          DB.pages.push({
+            id:"p-new-" + Date.now(), name:"亮点 · 四栏序号", type:"亮点", layout:"hl-3col",
+            hue:[248,284], deck:"2026 新解析方案.pptx", page:5, uses:0
+          });
+          setTimeout(() => { veil.remove(); render(); toast("已新增 2 个模板页、6 张图片（模拟）"); }, 500);
+        }
+      };
+      tick();
+    }
+  });
+}
+
+/* 首屏 */
+render();
+bootFromHash();
+window.addEventListener("hashchange", () => { bootFromHash(); });
+setTimeout(() => fitSlides(document), 30);
+</script>
+</body>
+</html>
