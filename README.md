@@ -47,6 +47,8 @@ git push -u origin main
 | `Permission denied (publickey)` | `~/.ssh/id_ed25519.pub` 未添加到 GitHub | 粘贴公钥到 Settings → SSH keys |
 | `Host key verification failed` | `github.com` 不在 `known_hosts` 且当前会话无法写入 `~/.ssh` | 在终端执行一次 `ssh -T git@github.com` 接受指纹 |
 | API 创建仓库返回 `403 Resource not accessible by personal access token` | 已存的 PAT 无仓库创建权限 | 网页创建仓库，或给 PAT 勾选 Administration 写权限 |
+| `src refspec # does not match any` | 把行内 `#` 注释一起粘进了 zsh；交互式 zsh 默认不解析 `#` | 命令与注释分行，或执行 `setopt interactive_comments` |
+| `Permission to <user>/<repo>.git denied to <user>` + `403` | 细粒度 PAT 只有该仓库的 Contents 只读权限 | 编辑 token：Repository access 选中该仓库，Permissions → Contents → Read and write |
 
 ### 用 PAT 推送（绕过钥匙串）
 
