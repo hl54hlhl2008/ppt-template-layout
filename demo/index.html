@@ -73,6 +73,8 @@
   .slide .pad{padding:64px 72px;height:100%;display:flex;flex-direction:column}
   .thumb-wrap{width:180px;aspect-ratio:16/9;overflow:hidden;border-radius:6px;background:#0b0d11;position:relative}
   .thumb-wrap .slide{transform:scale(.140625)}
+  .thumb-wrap.sm{width:140px}
+  .thumb-wrap.sm .slide{transform:scale(.109375)}
   .slide .brandline{font-size:20px;letter-spacing:3px;color:#8b95a7}
   .cover-h{font-size:66px;line-height:1.15;font-weight:800;letter-spacing:-1px}
   .cover-p{font-size:24px;color:#5d6a80;margin-top:18px}
@@ -111,6 +113,14 @@
 
   /* ---------- 方案模板编辑器 ---------- */
   .split{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+  .cols3{display:grid;grid-template-columns:250px 290px minmax(0,1fr);gap:14px;align-items:start}
+  .col-card{display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 170px)}
+  .col-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:#c3cddb}
+  .col-body{overflow:auto;display:flex;flex-direction:column;gap:4px;flex:1;min-height:60px}
+  .col-foot{display:flex;gap:6px;align-items:center;border-top:1px solid var(--line);padding-top:10px}
+  .col-foot input,.col-foot select{font-size:12px;padding:6px 8px;min-width:0}
+  .col-foot .btn{flex:0 0 auto;white-space:nowrap}
+  .ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .list-item{display:flex;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:9px;cursor:pointer;border:1px solid transparent}
   .list-item:hover{background:var(--panel-2)}
   .list-item.on{background:#1e2a44;border-color:#2f4a7a}
@@ -150,6 +160,7 @@
   .thumb-btn{border:2px solid transparent;padding:0;background:none;border-radius:7px;overflow:hidden;position:relative;line-height:0}
   .thumb-btn.on{border-color:var(--accent)}
   .thumb-btn .thumb-wrap{width:152px;display:block;margin:2px}
+  .thumb-btn .thumb-wrap .slide{transform:scale(.11875)}
   .thumb-btn .num{position:absolute;left:4px;top:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;line-height:1.5}
   .thumb-btn .dot{position:absolute;right:4px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--warn)}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
@@ -169,6 +180,10 @@
   .toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:60}
   .toast{background:#1c2431;border:1px solid #2c3748;border-left:3px solid var(--accent-2);padding:10px 14px;border-radius:8px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.4);animation:in .18s ease}
   @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .mdbox{background:#0f1319;border:1px solid var(--line);border-radius:9px;padding:12px;font-size:11.5px;line-height:1.75;color:#a9b6c8;max-height:330px;overflow:auto;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin:8px 0 0}
+  .mdinput{min-height:190px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.7}
+  .drop{border:1.5px dashed #2f3a4d;border-radius:10px;padding:22px 14px;text-align:center;color:var(--muted);font-size:12.5px;cursor:pointer;display:block;transition:.15s}
+  .drop:hover,.drop.over{border-color:#3a6bd0;background:#151c28;color:#c3cddb}
   .hidden{display:none !important}
   ::-webkit-scrollbar{width:9px;height:9px}
   ::-webkit-scrollbar-thumb{background:#242c3a;border-radius:9px}
@@ -218,10 +233,19 @@ const DB = {
     { id:"p-note-1", name:"须知 · 双栏清单", type:"须知", layout:"note-2col", hue:[16,30], deck:"2024 景德镇研学方案.pptx", page:11, uses:3 }
   ],
   decks: [
-    { id:"tpl-cover", name:"封面模板", desc:"方案首页，标题+副标题+主题标签", pages:["p-cover-1"] },
-    { id:"tpl-hl", name:"行程亮点模板", desc:"三个亮点卡片，一页讲透产品价值", pages:["p-hl-1"] },
-    { id:"tpl-sum", name:"研学行程汇总模板", desc:"逐日行程表 + 关键数据概览", pages:["p-it-1","p-sum-1"] },
-    { id:"tpl-full", name:"完整方案模板", desc:"封面 + 亮点 + 行程 + 汇总 + 须知", pages:["p-cover-1","p-hl-1","p-hl-2","p-it-1","p-sum-1","p-note-1"] }
+    { id:"tpl-cover", name:"封面模板", desc:"方案首页，标题+副标题+主题标签",
+      sections:[ { id:"c1", name:"封面", type:"封面", pages:["p-cover-1"] } ] },
+    { id:"tpl-hl", name:"行程亮点模板", desc:"三个亮点卡片，一页讲透产品价值",
+      sections:[ { id:"h1", name:"行程亮点", type:"亮点", pages:["p-hl-1","p-hl-2"] } ] },
+    { id:"tpl-sum", name:"研学行程汇总模板", desc:"逐日行程表 + 关键数据概览",
+      sections:[ { id:"s1", name:"研学行程汇总", type:"行程", pages:["p-it-1"] },
+                 { id:"s2", name:"关键数据", type:"汇总", pages:["p-sum-1"] } ] },
+    { id:"tpl-full", name:"完整方案模板", desc:"封面 + 亮点 + 行程 + 汇总 + 须知",
+      sections:[ { id:"f1", name:"封面", type:"封面", pages:["p-cover-1"] },
+                 { id:"f2", name:"行程亮点", type:"亮点", pages:["p-hl-1","p-hl-2"] },
+                 { id:"f3", name:"研学行程汇总", type:"行程", pages:["p-it-1"] },
+                 { id:"f4", name:"关键数据", type:"汇总", pages:["p-sum-1"] },
+                 { id:"f5", name:"报名须知", type:"须知", pages:["p-note-1"] } ] }
   ],
   gallery: [
     { id:"g1", name:"徽派马头墙", tags:["徽州","建筑","户外"], hue:[200,12], ratio:"4:3", from:"2025 徽州方案 P2" },
@@ -273,11 +297,20 @@ const state = {
   view:"home",
   filter:"全部",
   activeDeck:"tpl-full",
+  activeSection:"f1",
   wizard:{ step:1, deckId:"tpl-full", content:null, images:{} },
   deck:null,
   selected:0,
   editingField:null
 };
+
+const SECTION_TYPES = [
+  { type:"封面", name:"封面", page:"p-cover-1" },
+  { type:"亮点", name:"行程亮点", page:"p-hl-1" },
+  { type:"行程", name:"研学行程汇总", page:"p-it-1" },
+  { type:"汇总", name:"关键数据", page:"p-sum-1" },
+  { type:"须知", name:"报名须知", page:"p-note-1" }
+];
 
 const CHECK_BUDGET = {
   "cover.title": 26, "cover.subtitle": 34, "cover.tag": 16,
@@ -306,6 +339,8 @@ function toast(msg, kind){
 function pageById(id){ return DB.pages.find((p) => p.id === id); }
 function deckById(id){ return DB.decks.find((d) => d.id === id); }
 function galleryById(id){ return DB.gallery.find((g) => g.id === id); }
+function flatPages(deck){ return deck.sections.reduce((acc, s) => acc.concat(s.pages), []); }
+function sectionOf(decks, id){ return (decks || DB.decks).reduce((acc, d) => acc.concat(d.sections), []).find((s) => s.id === id); }
 
 /* 图片槽位决策：手动 > 图库 > 待配图（key 形如 "p-hl-1:0"） */
 function decisionFor(key){
@@ -481,35 +516,64 @@ function viewLibrary(){
    视图：方案模板
    ========================================================= */
 function viewDecks(){
-  const list = DB.decks.map((d) => '<div class="list-item ' + (d.id === state.activeDeck ? "on" : "") + '" data-deck="' + d.id + '">'
-    + '<div><div style="font-size:13px;font-weight:600">' + esc(d.name) + '</div>'
-    + '<div class="sub" style="font-size:11.5px">' + d.pages.length + " 页</div></div>"
-    + '<span class="tag">' + d.pages.length + "</span></div>").join("");
+  const d = deckById(state.activeDeck) || DB.decks[0];
+  if (!d) return '<div class="empty">还没有方案模板，先新建一个</div>';
+  if (!d.sections.some((x) => x.id === state.activeSection)) state.activeSection = d.sections[0] ? d.sections[0].id : null;
 
-  const d = deckById(state.activeDeck);
-  const rows = d.pages.map((pid, i) => {
-    const p = pageById(pid);
-    const thumb = slideHTML(p, CONTENT_SAMPLE, { index:i });
-    return '<div class="seq-row"><div class="seq-idx">' + (i + 1) + "</div>"
-      + '<div class="thumb-wrap" data-stage>' + thumb + "</div>"
-      + '<div><div style="font-size:13px;font-weight:600">' + esc(p.name) + "</div>"
-      + '<div class="sub" style="font-size:11.5px">' + esc(p.type) + " · 来源 " + esc(p.deck) + "</div></div>"
-      + '<div class="row"><button class="icon-btn" data-move="up" data-idx="' + i + '" title="上移">↑</button>'
-      + '<button class="icon-btn" data-move="down" data-idx="' + i + '" title="下移">↓</button>'
-      + '<button class="icon-btn" data-move="del" data-idx="' + i + '" title="移除">✕</button></div></div>';
-  }).join("");
+  /* 第 1 列：方案模板列表 */
+  const tplList = DB.decks.map((x) => '<div class="list-item ' + (x.id === d.id ? "on" : "") + '" data-deck="' + x.id + '">'
+    + '<div style="min-width:0"><div class="ellipsis" style="font-size:13px;font-weight:600">' + esc(x.name) + "</div>"
+    + '<div class="sub" style="font-size:11.5px">' + x.sections.length + " 板块 · " + flatPages(x).length + " 页</div></div>"
+    + '<button class="icon-btn" data-del-deck="' + x.id + '" title="删除方案模板">✕</button></div>').join("");
 
-  const picker = DB.pages.map((p) => '<option value="' + p.id + '">' + esc(p.type + " · " + p.name) + "</option>").join("");
+  /* 第 2 列：板块列表 */
+  const secList = d.sections.length ? d.sections.map((sec, i) => {
+    const bad = sec.pages.some((pid) => { const pg = pageById(pid); return pg && pg.type !== sec.type; });
+    return '<div class="list-item ' + (sec.id === state.activeSection ? "on" : "") + '" data-section="' + sec.id + '">'
+      + '<div style="min-width:0"><div class="ellipsis" style="font-size:13px;font-weight:600">' + (i + 1) + ". " + esc(sec.name)
+      + (bad ? ' <span class="tag warn" style="font-size:10px">页型不符</span>' : "") + "</div>"
+      + '<div class="sub" style="font-size:11.5px">' + esc(sec.type) + " · " + sec.pages.length + " 页</div></div>"
+      + '<div class="row"><button class="icon-btn" data-move-sec="up" data-sid="' + sec.id + '" title="上移">↑</button>'
+      + '<button class="icon-btn" data-move-sec="down" data-sid="' + sec.id + '" title="下移">↓</button>'
+      + '<button class="icon-btn" data-del-sec="' + sec.id + '" title="删除板块">✕</button></div></div>';
+  }).join("") : '<div class="empty" style="padding:16px">还没有板块，从下方添加</div>';
 
-  return '<div class="top"><div><h1>方案模板</h1><div class="sub">把模板页按顺序组合成方案模板，排版时按文案填充</div></div>'
+  /* 第 3 列：当前板块的页面 */
+  const sec = d.sections.find((x) => x.id === state.activeSection) || d.sections[0];
+  const pageRows = sec && sec.pages.length ? sec.pages.map((pid, i) => {
+    const pg = pageById(pid);
+    if (!pg) return "";
+    return '<div class="seq-row" style="grid-template-columns:24px 140px 1fr auto"><div class="seq-idx">' + (i + 1) + "</div>"
+      + '<div class="thumb-wrap sm">' + slideHTML(pg, CONTENT_SAMPLE, { index:i }) + "</div>"
+      + '<div style="min-width:0"><div class="ellipsis" style="font-size:13px;font-weight:600">' + esc(pg.name) + "</div>"
+      + '<div class="sub" style="font-size:11.5px">' + esc(pg.type) + " · " + esc(pg.deck) + "</div></div>"
+      + '<div class="row"><button class="icon-btn" data-move="up" data-idx="' + i + '">↑</button>'
+      + '<button class="icon-btn" data-move="down" data-idx="' + i + '">↓</button>'
+      + '<button class="icon-btn" data-move="del" data-idx="' + i + '">✕</button></div></div>';
+  }).join("") : '<div class="empty">该板块还没有页面</div>';
+
+  const pagePicker = DB.pages.map((p) => '<option value="' + p.id + '">' + esc(p.name) + "</option>").join("");
+  const secPicker = SECTION_TYPES.map((t) => '<option value="' + t.type + '">' + esc(t.name) + "</option>").join("");
+
+  return '<div class="top"><div><h1>方案模板</h1><div class="sub">方案模板 → 板块 → 页面，三级组合；排版时按板块顺序取页</div></div>'
     + '<div class="row"><button class="btn" data-act="save-deck">保存模板</button>'
     + '<button class="btn primary" data-act="new">用此模板新建方案</button></div></div>'
-    + '<div class="split"><div class="card"><div class="sub" style="margin-bottom:10px">方案模板列表</div><div style="display:flex;flex-direction:column;gap:4px">' + list + "</div></div>"
-    + '<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:12px">'
-    + '<div><b style="font-size:13.5px">' + esc(d.name) + '</b><div class="sub" style="font-size:12px">' + esc(d.desc) + "</div></div>"
-    + '<div class="row"><select id="add-page" style="width:200px">' + picker + "</select>"
-    + '<button class="btn sm" data-act="add-page">添加页</button></div></div>'
-    + (rows ? '<div class="seq">' + rows + "</div>" : '<div class="empty">还没有模板页，从上面选择添加</div>')
+    + '<div class="cols3">'
+    /* 列 1 */
+    + '<div class="card col-card"><div class="col-head"><span>方案模板列表</span><span class="tag">' + DB.decks.length + "</span></div>"
+    + '<div class="col-body">' + tplList + "</div>"
+    + '<div class="col-foot"><input type="text" id="new-deck-name" placeholder="新模板名称">'
+    + '<button class="btn sm" data-act="new-deck">新建</button></div></div>'
+    /* 列 2 */
+    + '<div class="card col-card"><div class="col-head"><span>' + esc(d.name) + " · 板块</span><span class=\"tag\">" + d.sections.length + "</span></div>"
+    + '<div class="col-body">' + secList + "</div>"
+    + '<div class="col-foot"><select id="new-section-type" style="flex:1">' + secPicker + "</select>"
+    + '<button class="btn sm" data-act="new-section">添加板块</button></div></div>'
+    /* 列 3 */
+    + '<div class="card col-card"><div class="col-head"><span>' + (sec ? esc(sec.name) + " · 页面" : "页面") + '</span><span class="tag">' + (sec ? sec.pages.length : 0) + "</span></div>"
+    + '<div class="col-body">' + (sec ? pageRows : '<div class="empty">先选择或新建板块</div>') + "</div>"
+    + (sec ? '<div class="col-foot"><select id="add-page" style="flex:1">' + pagePicker + "</select>"
+    + '<button class="btn sm" data-act="add-page">添加页</button></div>' : "")
     + "</div></div>";
 }
 
@@ -529,6 +593,155 @@ function viewGallery(){
 }
 
 /* =========================================================
+   Markdown 文案模板与解析
+   ========================================================= */
+function buildMarkdown(deckId, c){
+  const d = deckById(deckId);
+  const has = (t) => d.sections.some((x) => x.type === t);
+  const v = (val, ph) => (c && val != null && val !== "" ? val : ph);
+  const L = [];
+  L.push("# " + v(c && c.cover.title, "{{方案标题，例：2026 春季 · 徽州研学营}}"));
+  L.push("");
+  L.push("> " + v(c && c.cover.subtitle, "{{副标题，例：4 天 3 晚 · 初二语文与历史跨学科实践}}"));
+  L.push("");
+  if (has("封面")){
+    L.push("标签: " + v(c && c.cover.tag, "{{主题标签，例：徽州文化 · 非遗体验}}"));
+    L.push("");
+  }
+  if (has("亮点")){
+    L.push("## 行程亮点");
+    L.push("");
+    for (let i = 0; i < 3; i++){
+      const h = c && c.highlights[i];
+      L.push("### " + v(h && h.title, "{{亮点" + (i + 1) + "标题，≤10 字}}"));
+      L.push(v(h && h.text, "{{亮点" + (i + 1) + "正文，20-60 字，写清学生做什么}}"));
+      L.push("");
+    }
+  }
+  if (has("行程")){
+    L.push("## 研学行程汇总");
+    L.push("");
+    L.push("| 日程 | 行程 | 内容 |");
+    L.push("| --- | --- | --- |");
+    for (let i = 0; i < 4; i++){
+      const r = c && c.itinerary[i];
+      L.push("| " + (r ? r.day : "D" + (i + 1)) + " | " + v(r && r.route, "{{行程}}") + " | " + v(r && r.detail, "{{内容}}") + " |");
+    }
+    L.push("");
+  }
+  if (has("汇总")){
+    L.push("## 关键数据");
+    L.push("");
+    for (let i = 0; i < 4; i++){
+      const st = c && c.summary[i];
+      const val = st ? st.value + (st.unit ? " " + st.unit : "") : "{{数值 单位}}";
+      L.push("- " + val + " | " + (st ? st.label : "{{指标名}}"));
+    }
+    L.push("");
+  }
+  if (has("须知")){
+    L.push("## 报名须知");
+    L.push("");
+    if (c && c.note.length){
+      c.note.forEach((x) => L.push("- " + x));
+    } else {
+      L.push("- {{须知 1，例：费用含交通、住宿、课程物料与保险}}");
+      L.push("- {{须知 2}}");
+    }
+    L.push("");
+  }
+  return L.join("\n");
+}
+
+function deckMarkdownTemplate(deckId){ return buildMarkdown(deckId, null); }
+function contentToMarkdown(deckId, c){ return buildMarkdown(deckId, c); }
+
+function parseMarkdownContent(md){
+  const c = { cover:{ title:"", subtitle:"", tag:"" }, highlights:[], itinerary:[], summary:[], note:[] };
+  const warn = [];
+  const lines = String(md || "").split(/\r?\n/);
+  let sec = "";
+  let item = null;
+  let headerSeen = false;
+
+  lines.forEach((raw) => {
+    const line = raw.trim();
+    if (!line){ item = null; return; }
+
+    if (line.indexOf("## ") === 0){ sec = line.slice(3).trim(); item = null; headerSeen = false; return; }
+    if (line.indexOf("# ") === 0){ c.cover.title = line.slice(2).trim(); return; }
+    if (line.indexOf("### ") === 0){
+      item = { title: line.slice(4).trim(), text:"" };
+      if (sec.indexOf("亮点") >= 0) c.highlights.push(item);
+      return;
+    }
+    if (line.indexOf("> ") === 0){ c.cover.subtitle = line.slice(2).trim(); return; }
+
+    const mt = line.match(/^标签[:：]\s*(.+)$/);
+    if (mt){ c.cover.tag = mt[1].trim(); return; }
+
+    if (line.charAt(0) === "|"){
+      const cells = line.replace(/^\|/, "").replace(/\|$/, "").split("|").map((x) => x.trim());
+      const isSep = cells.every((x) => x === "" || /^:?-{2,}:?$/.test(x));
+      if (isSep) return;
+      if (!headerSeen){ headerSeen = true; return; }
+      if (sec.indexOf("行程") >= 0 && cells.length >= 3){
+        c.itinerary.push({ day:cells[0], route:cells[1], detail:cells[2] });
+      }
+      return;
+    }
+
+    if (line.indexOf("- ") === 0){
+      const body = line.slice(2).trim();
+      if (sec.indexOf("数据") >= 0 || sec.indexOf("汇总") >= 0){
+        const parts = body.split("|");
+        if (parts.length >= 2){
+          const head = parts[0].trim().split(/\s+/);
+          c.summary.push({ value:head[0] || "", unit:head.slice(1).join(" "), label:parts[1].trim() });
+        }
+      } else {
+        c.note.push(body);
+      }
+      return;
+    }
+
+    if (item) item.text = (item.text ? item.text + " " : "") + line;
+  });
+
+  if (!c.cover.title) warn.push("缺少一级标题：# 方案标题");
+  if (!c.cover.subtitle) warn.push("缺少副标题：> 副标题");
+  if (!c.cover.tag) warn.push("缺少主题标签：标签: xxx");
+  if (!c.highlights.length) warn.push("未解析到亮点：需要 ## 行程亮点 与其下的 ### 小节");
+  c.highlights.forEach((h, i) => { if (!h.text) warn.push("亮点 " + (i + 1) + " 只有标题、缺正文"); });
+  if (!c.itinerary.length) warn.push("未解析到行程：需要 ## 研学行程汇总 下的表格");
+  if (!c.summary.length) warn.push("未解析到关键数据：## 关键数据 下的 - 值 单位 | 指标名");
+  if (!c.note.length) warn.push("未解析到须知：## 报名须知 下的 - 列表");
+
+  return { content:c, warnings:warn };
+}
+
+function parseResultHTML(parsed){
+  const c = parsed.content;
+  const rows = [
+    ["方案标题", c.cover.title, !!c.cover.title],
+    ["副标题", c.cover.subtitle, !!c.cover.subtitle],
+    ["主题标签", c.cover.tag, !!c.cover.tag],
+    ["行程亮点", c.highlights.length + " 条", c.highlights.length > 0],
+    ["行程安排", c.itinerary.length + " 行", c.itinerary.length > 0],
+    ["关键数据", c.summary.length + " 项", c.summary.length > 0],
+    ["报名须知", c.note.length + " 条", c.note.length > 0]
+  ];
+  return '<div class="panel" style="padding:10px 12px;background:#12161c">'
+    + rows.map((r) => '<div class="kv"><span>' + esc(r[0]) + "</span>"
+      + '<span class="row"><span class="tag ' + (r[2] ? "ok" : "warn") + '">' + (r[2] ? "已解析" : "缺失") + "</span>"
+      + '<span class="sub" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(r[1]) + "</span></span></div>").join("")
+    + "</div>"
+    + (parsed.warnings.length
+      ? '<div style="margin-top:10px">' + parsed.warnings.map((w) => '<div class="issue"><span class="tag warn">提醒</span><span>' + esc(w) + "</span></div>").join("") + "</div>"
+      : '<div class="issue" style="margin-top:10px"><span class="tag ok">通过</span><span>字段齐全，可以生成</span></div>');
+}
+
+/* =========================================================
    视图：向导
    ========================================================= */
 function viewWizard(){
@@ -544,37 +757,41 @@ function viewWizard(){
   let body = "";
   if (w.step === 1){
     const cards = DB.decks.map((d) => '<div class="tpl-card" data-pick="' + d.id + '" style="cursor:pointer;border-color:' + (w.deckId === d.id ? "#3a6bd0" : "var(--line)") + '">'
-      + '<div class="stage" data-stage>' + slideHTML(pageById(d.pages[0]), CONTENT_SAMPLE, { index:0 }) + "</div>"
-      + '<div class="tpl-meta"><div><div class="tpl-name">' + esc(d.name) + '</div><div class="sub" style="font-size:11.5px">' + d.pages.length + " 页 · " + esc(d.desc) + "</div></div>"
+      + '<div class="stage" data-stage>' + slideHTML(pageById(flatPages(d)[0]), CONTENT_SAMPLE, { index:0 }) + "</div>"
+      + '<div class="tpl-meta"><div><div class="tpl-name">' + esc(d.name) + '</div><div class="sub" style="font-size:11.5px">' + d.sections.length + " 板块 · " + flatPages(d).length + " 页</div></div>"
       + (w.deckId === d.id ? '<span class="tag ok">已选</span>' : "") + "</div></div>").join("");
     body = '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">' + cards + "</div>";
   }
 
   if (w.step === 2){
-    const c = w.content || CONTENT_SAMPLE;
-    const hl = c.highlights.map((h, i) => '<div class="field"><label>亮点 ' + (i + 1) + " 标题</label>"
-      + '<input type="text" data-bind="hl-title-' + i + '" value="' + esc(h.title) + '">'
-      + '<div class="hint">正文</div><textarea data-bind="hl-text-' + i + '">' + esc(h.text) + "</textarea></div>").join("");
-    const it = c.itinerary.map((r, i) => '<tr>'
-      + '<td><input type="text" data-bind="it-day-' + i + '" value="' + esc(r.day) + '" style="width:52px"></td>'
-      + '<td><input type="text" data-bind="it-route-' + i + '" value="' + esc(r.route) + '"></td>'
-      + '<td><input type="text" data-bind="it-detail-' + i + '" value="' + esc(r.detail) + '"></td></tr>').join("");
-    body = '<div class="two"><div class="card">'
-      + '<h3 style="margin:0 0 12px;font-size:13px">封面文案</h3>'
-      + '<div class="field"><label>标题</label><input type="text" data-bind="cover-title" value="' + esc(c.cover.title) + '"></div>'
-      + '<div class="field"><label>副标题</label><input type="text" data-bind="cover-subtitle" value="' + esc(c.cover.subtitle) + '"></div>'
-      + '<div class="field"><label>主题标签</label><input type="text" data-bind="cover-tag" value="' + esc(c.cover.tag) + '"></div>'
-      + '<button class="btn sm" data-act="load-sample">载入示例文案</button></div>'
-      + '<div class="card"><h3 style="margin:0 0 12px;font-size:13px">行程安排</h3>'
-      + '<table class="tbl" style="font-size:12px"><tbody>' + it + "</tbody></table>"
-      + '<div class="hint">演示版仅提供 4 天行程字段</div></div></div>'
-      + '<div class="card" style="margin-top:12px"><h3 style="margin:0 0 12px;font-size:13px">行程亮点</h3><div class="three">' + hl + "</div></div>";
+    const d = deckById(w.deckId);
+    const tpl = deckMarkdownTemplate(w.deckId);
+    const parsed = w.parsed;
+    const mdText = w.mdText || "";
+    body = '<div class="two">'
+      + '<div class="card"><h3 style="margin:0 0 8px;font-size:13px">标准文案模板 · 来自「' + esc(d.name) + '」</h3>'
+      + '<div class="hint">按板块生成骨架，只填花括号内容，不要改动 <code>#</code> / <code>##</code> 标题行</div>'
+      + '<pre class="mdbox">' + esc(tpl) + "</pre>"
+      + '<div class="row" style="margin-top:10px"><button class="btn sm" data-act="download-md">下载 .md 模板</button>'
+      + '<button class="btn sm" data-act="fill-sample">填入示例文案</button></div></div>'
+      + '<div class="card"><h3 style="margin:0 0 8px;font-size:13px">上传 Markdown 文案</h3>'
+      + '<label class="drop" id="drop"><input type="file" id="md-file" accept=".md,.markdown,text/markdown" style="display:none">'
+      + '<div>点击选择 <b>.md</b> 文件，或把文件拖到这里</div></label>'
+      + '<div class="field" style="margin-top:12px"><label>或直接粘贴 / 编辑</label>'
+      + '<textarea id="md-text" class="mdinput" placeholder="# 方案标题&#10;> 副标题">' + esc(mdText) + "</textarea></div>"
+      + '<div class="row"><button class="btn primary sm" data-act="parse-md">解析文案</button>'
+      + (parsed ? '<span class="tag ok">已解析</span>' : '<span class="tag">待解析</span>')
+      + '<span class="hint" style="margin-left:auto">解析在本地完成，不上传文件</span></div></div></div>'
+      + '<div class="card" style="margin-top:12px"><h3 style="margin:0 0 10px;font-size:13px">字段映射结果</h3>'
+      + (parsed ? parseResultHTML(parsed)
+                : '<div class="empty">上传或粘贴 Markdown 后点「解析文案」，这里会显示每个板块的解析情况与缺失字段</div>')
+      + "</div>";
   }
 
   if (w.step === 3){
     const d = deckById(w.deckId);
     const slots = [];
-    d.pages.forEach((pid) => {
+    flatPages(d).forEach((pid) => {
       const p = pageById(pid);
       if (p.layout === "cover-full" || p.layout === "cover-split") slots.push({ page:p, n:1 });
       if (p.layout === "hl-3col") slots.push({ page:p, n:3 });
@@ -603,7 +820,7 @@ function viewWizard(){
     + '<div class="stepper">' + stepper + "</div>" + body
     + '<div class="row" style="margin-top:18px;justify-content:flex-end">'
     + (w.step > 1 ? '<button class="btn" data-act="prev">上一步</button>' : "")
-    + (w.step < 3 ? '<button class="btn primary" data-act="next">下一步</button>' : "")
+    + (w.step < 3 ? '<button class="btn primary" data-act="next"' + (w.step === 2 && !w.parsed ? " disabled" : "") + ">下一步</button>" : "")
     + "</div>";
 }
 
@@ -674,14 +891,19 @@ function bootFromHash(){
   const raw = (location.hash || "").replace("#", "");
   if (!raw) return false;
   const pm = raw.match(/^preview(?:-(\d+))?$/);
-  const h = pm ? "preview" : raw;
+  const h = pm ? "preview" : (raw === "wizard-md" ? "wizard" : raw);
   if (h === "preview" && !state.deck){
     state.deck = buildDeck("tpl-full", JSON.parse(JSON.stringify(CONTENT_SAMPLE)));
     state.selected = 0;
   }
   if (pm && pm[1]) state.selected = Number(pm[1]);
   if (h === "wizard"){
-    state.wizard = { step:2, deckId:"tpl-full", content: JSON.parse(JSON.stringify(CONTENT_SAMPLE)), images:{} };
+    state.wizard = { step:2, deckId:"tpl-full", content:null, images:{}, mdText:"", parsed:null };
+    if (raw === "wizard-md"){
+      state.wizard.mdText = contentToMarkdown("tpl-full", JSON.parse(JSON.stringify(CONTENT_SAMPLE)));
+      state.wizard.parsed = parseMarkdownContent(state.wizard.mdText);
+      state.wizard.content = state.wizard.parsed.content;
+    }
   }
   if (["home","library","decks","gallery","wizard","preview"].indexOf(h) >= 0){ go(h); return true; }
   return false;
@@ -692,7 +914,10 @@ function bootFromHash(){
    ========================================================= */
 function buildDeck(deckId, content){
   const d = deckById(deckId);
-  const pages = d.pages.map((pid, i) => {
+  const items = [];
+  d.sections.forEach((sec) => sec.pages.forEach((pid) => items.push({ pid:pid, section:sec })));
+  const pages = items.map((item, i) => {
+    const pid = item.pid;
     const page = pageById(pid);
     const fields = [];
     const issues = [];
@@ -734,7 +959,7 @@ function buildDeck(deckId, content){
     if (slots.some((s) => s.source === "todo")) issues.push({ level:"warn", text:"存在待配图槽位，已用占位色块替代" });
 
     return {
-      page:page, index:i, fields:fields, issues:issues, slots:slots,
+      page:page, section:item.section, index:i, fields:fields, issues:issues, slots:slots,
       hasIssue:issues.length > 0,
       html:slideHTML(page, content, { index:i }),
       content:content
@@ -783,14 +1008,52 @@ document.addEventListener("click", (e) => {
   const pick = e.target.closest("[data-pick]");
   if (pick){ state.wizard.deckId = pick.dataset.pick; render(); return; }
 
+  const moveSec = e.target.closest("[data-move-sec]");
+  if (moveSec){
+    const d = deckById(state.activeDeck);
+    const sid = moveSec.dataset.sid;
+    const i = d.sections.findIndex((x) => x.id === sid);
+    const op = moveSec.dataset.moveSec;
+    if (op === "up" && i > 0){ const t = d.sections[i - 1]; d.sections[i - 1] = d.sections[i]; d.sections[i] = t; }
+    if (op === "down" && i < d.sections.length - 1){ const t = d.sections[i + 1]; d.sections[i + 1] = d.sections[i]; d.sections[i] = t; }
+    render(); toast("已调整板块顺序");
+    return;
+  }
+
+  const delSec = e.target.closest("[data-del-sec]");
+  if (delSec){
+    const d = deckById(state.activeDeck);
+    const sid = delSec.dataset.delSec;
+    d.sections = d.sections.filter((x) => x.id !== sid);
+    state.activeSection = d.sections[0] ? d.sections[0].id : null;
+    render(); toast("已删除板块");
+    return;
+  }
+
+  const delDeck = e.target.closest("[data-del-deck]");
+  if (delDeck){
+    const id = delDeck.dataset.delDeck;
+    if (DB.decks.length <= 1){ toast("至少保留一个方案模板", "warn"); return; }
+    DB.decks = DB.decks.filter((x) => x.id !== id);
+    if (state.activeDeck === id) state.activeDeck = DB.decks[0].id;
+    state.activeSection = deckById(state.activeDeck).sections[0] ? deckById(state.activeDeck).sections[0].id : null;
+    render(); toast("已删除方案模板");
+    return;
+  }
+
+  const secItem = e.target.closest("[data-section]");
+  if (secItem){ state.activeSection = secItem.dataset.section; render(); return; }
+
   const moveBtn = e.target.closest("[data-move]");
   if (moveBtn){
     const d = deckById(state.activeDeck);
+    const sec = d.sections.find((x) => x.id === state.activeSection) || d.sections[0];
+    if (!sec) return;
     const idx = Number(moveBtn.dataset.idx);
     const op = moveBtn.dataset.move;
-    if (op === "del"){ d.pages.splice(idx, 1); }
-    if (op === "up" && idx > 0){ const t = d.pages[idx - 1]; d.pages[idx - 1] = d.pages[idx]; d.pages[idx] = t; }
-    if (op === "down" && idx < d.pages.length - 1){ const t = d.pages[idx + 1]; d.pages[idx + 1] = d.pages[idx]; d.pages[idx] = t; }
+    if (op === "del") sec.pages.splice(idx, 1);
+    if (op === "up" && idx > 0){ const t = sec.pages[idx - 1]; sec.pages[idx - 1] = sec.pages[idx]; sec.pages[idx] = t; }
+    if (op === "down" && idx < sec.pages.length - 1){ const t = sec.pages[idx + 1]; sec.pages[idx + 1] = sec.pages[idx]; sec.pages[idx] = t; }
     render(); toast("已更新页序");
     return;
   }
@@ -835,7 +1098,7 @@ document.addEventListener("click", (e) => {
   const a = act.dataset.act;
 
   if (a === "new"){
-    state.wizard = { step:1, deckId: state.view === "decks" ? state.activeDeck : "tpl-full", content:null, images:{} };
+    state.wizard = { step:1, deckId: state.view === "decks" ? state.activeDeck : "tpl-full", content:null, images:{}, mdText:"", parsed:null };
     go("wizard"); return;
   }
   if (a === "back" || a === "home"){ go(state.view === "wizard" ? "home" : "home"); return; }
@@ -846,18 +1109,68 @@ document.addEventListener("click", (e) => {
   if (a === "prev"){ state.wizard.step = Math.max(1, state.wizard.step - 1); render(); return; }
   if (a === "generate"){ generate(); return; }
 
-  if (a === "load-sample"){
-    state.wizard.content = JSON.parse(JSON.stringify(CONTENT_SAMPLE));
-    render(); toast("已载入示例文案"); return;
+  if (a === "new-deck"){
+    const input = document.getElementById("new-deck-name");
+    const name = input && input.value.trim();
+    if (!name){ toast("请先填写模板名称", "warn"); return; }
+    const id = "tpl-" + Date.now();
+    DB.decks.push({ id:id, name:name, desc:"新建模板", sections:[] });
+    state.activeDeck = id;
+    state.activeSection = null;
+    render(); toast("已新建方案模板：" + name);
+    return;
+  }
+  if (a === "new-section"){
+    const sel = document.getElementById("new-section-type");
+    const d = deckById(state.activeDeck);
+    const preset = SECTION_TYPES.find((x) => x.type === (sel ? sel.value : "封面")) || SECTION_TYPES[0];
+    const sid = "sec-" + Date.now();
+    d.sections.push({ id:sid, name:preset.name, type:preset.type, pages:[preset.page] });
+    state.activeSection = sid;
+    render(); toast("已添加板块：" + preset.name);
+    return;
+  }
+
+  if (a === "fill-sample"){
+    state.wizard.mdText = contentToMarkdown(state.wizard.deckId, CONTENT_SAMPLE);
+    state.wizard.parsed = parseMarkdownContent(state.wizard.mdText);
+    state.wizard.content = state.wizard.parsed.content;
+    render(); toast("已填入示例文案");
+    return;
+  }
+  if (a === "parse-md"){
+    const box = document.getElementById("md-text");
+    const text = box ? box.value : (state.wizard.mdText || "");
+    state.wizard.mdText = text;
+    state.wizard.parsed = parseMarkdownContent(text);
+    state.wizard.content = state.wizard.parsed.content;
+    render();
+    toast(state.wizard.parsed.warnings.length ? "解析完成，有 " + state.wizard.parsed.warnings.length + " 项提醒" : "解析完成，字段齐全", state.wizard.parsed.warnings.length ? "warn" : "ok");
+    return;
+  }
+  if (a === "download-md"){
+    const md = deckMarkdownTemplate(state.wizard.deckId);
+    const blob = new Blob([md], { type:"text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = (deckById(state.wizard.deckId) || {}).name + "-文案模板.md";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    toast("已下载文案模板");
+    return;
   }
 
   if (a === "add-page"){
-    const sel = $("#add-page");
+    const sel = document.getElementById("add-page");
     const d = deckById(state.activeDeck);
-    if (sel && sel.value){ d.pages.push(sel.value); render(); toast("已添加模板页"); }
+    const sec = d.sections.find((x) => x.id === state.activeSection) || d.sections[0];
+    if (sel && sel.value && sec){ sec.pages.push(sel.value); render(); toast("已添加页面到「" + sec.name + "」"); }
     return;
   }
-  if (a === "save-deck"){ toast("方案模板已保存（模拟）"); return; }
+  if (a === "save-deck"){ toast("方案模板已保存（模拟，仅存于内存）"); return; }
   if (a === "export"){ toast("已导出 pptx（模拟，未生成真实文件）", "warn"); return; }
   if (a === "parse"){ parseModal(); return; }
 });
@@ -924,6 +1237,42 @@ document.addEventListener("input", (e) => {
     const ip = document.getElementById("issues-panel");
     if (ip) ip.innerHTML = "<h3>问题检查</h3>" + issuesHTML(cur);
   }
+});
+
+/* Markdown 文件读取 */
+function readMdFile(file){
+  if (!file) return;
+  if (!/\.(md|markdown|txt)$/i.test(file.name)){ toast("请选择 .md 文件", "warn"); return; }
+  const reader = new FileReader();
+  reader.onload = function(){
+    state.wizard.mdText = String(reader.result || "");
+    state.wizard.parsed = parseMarkdownContent(state.wizard.mdText);
+    state.wizard.content = state.wizard.parsed.content;
+    render();
+    toast("已解析 " + file.name + "，字段 " + (state.wizard.parsed.warnings.length ? "有 " + state.wizard.parsed.warnings.length + " 项提醒" : "齐全"));
+  };
+  reader.onerror = function(){ toast("文件读取失败", "warn"); };
+  reader.readAsText(file, "utf-8");
+}
+
+document.addEventListener("change", function(e){
+  if (e.target && e.target.id === "md-file") readMdFile(e.target.files && e.target.files[0]);
+});
+
+document.addEventListener("dragover", function(e){
+  const z = e.target && e.target.closest ? e.target.closest("#drop") : null;
+  if (z){ e.preventDefault(); z.classList.add("over"); }
+});
+document.addEventListener("dragleave", function(e){
+  const z = e.target && e.target.closest ? e.target.closest("#drop") : null;
+  if (z) z.classList.remove("over");
+});
+document.addEventListener("drop", function(e){
+  const z = e.target && e.target.closest ? e.target.closest("#drop") : null;
+  if (!z) return;
+  e.preventDefault();
+  z.classList.remove("over");
+  readMdFile(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
 });
 
 /* 解析历史方案：模拟进度 */

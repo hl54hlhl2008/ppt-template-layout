@@ -23,11 +23,19 @@ demo/index.html#library     # 模板库
 demo/index.html#decks       # 方案模板编辑
 demo/index.html#gallery     # 图库
 demo/index.html#wizard      # 新建方案向导（第 2 步）
+demo/index.html#wizard-md   # 向导第 2 步，已解析示例 Markdown
 demo/index.html#preview     # 生成结果预览（#preview-2 跳到第 2 页）
 ```
 
-演示路径：工作台 →「+ 新建方案」→ 选模板 → 填文案 → 配图生成 → 预览调字段/换图。
-所有解析与生成均为模拟动画，数据写死在脚本里，不发任何网络请求。
+演示路径：工作台 →「+ 新建方案」→ 选模板 → 上传 Markdown 文案 → 配图生成 → 预览调字段/换图。
+所有解析与生成均为模拟动画，数据写死在脚本里，不发任何网络请求（Markdown 解析在浏览器本地完成）。
+
+**方案模板编辑器**（`#decks`）是三列结构：方案模板列表 → 板块列表 → 页面，
+三列都支持新建、删除、上移下移与保存。板块＝封面 / 行程亮点 / 研学行程汇总 / 关键数据 / 报名须知。
+
+**文案输入**（`#wizard`）不再逐页手填：选好方案模板后，系统按板块生成标准 Markdown 骨架，
+可下载 `.md`、填写后上传，解析结果按板块回填并标出缺失字段。示例见
+[samples/徽州研学营-文案示例.md](samples/徽州研学营-文案示例.md)。
 
 ![工作台](demo/screenshots/01-home.png)
 
