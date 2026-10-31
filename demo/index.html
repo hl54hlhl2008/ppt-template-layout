@@ -180,6 +180,17 @@
   .toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:60}
   .toast{background:#1c2431;border:1px solid #2c3748;border-left:3px solid var(--accent-2);padding:10px 14px;border-radius:8px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.4);animation:in .18s ease}
   @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .pagelib{margin-top:16px}
+  .pagelib .grid-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:12px}
+  .pick-card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden;cursor:pointer;transition:.12s}
+  .pick-card:hover{border-color:#39445a;transform:translateY(-1px)}
+  .pick-card.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  .pick-meta{padding:8px 10px;display:flex;flex-direction:column;gap:5px}
+  .pick-check{position:absolute;left:8px;top:8px;width:20px;height:20px;border-radius:6px;background:var(--accent);color:#fff;display:none;place-items:center;font-size:12px;font-weight:700}
+  .pick-card.on .pick-check{display:grid}
+  .pick-add{position:absolute;right:8px;top:8px;width:24px;height:24px;border-radius:7px;background:rgba(10,12,16,.75);border:1px solid #3a4557;color:#dbe4f0;display:grid;place-items:center;font-size:15px;line-height:1;padding:0}
+  .pick-add:hover{background:var(--accent);border-color:transparent;color:#fff}
+  .pick-bar{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);flex-wrap:wrap}
   .mdbox{background:#0f1319;border:1px solid var(--line);border-radius:9px;padding:12px;font-size:11.5px;line-height:1.75;color:#a9b6c8;max-height:330px;overflow:auto;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin:8px 0 0}
   .mdinput{min-height:190px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.7}
   .drop{border:1.5px dashed #2f3a4d;border-radius:10px;padding:22px 14px;text-align:center;color:var(--muted);font-size:12.5px;cursor:pointer;display:block;transition:.15s}
@@ -298,6 +309,8 @@ const state = {
   filter:"全部",
   activeDeck:"tpl-full",
   activeSection:"f1",
+  pickPages:[],
+  pickFilter:"全部",
   wizard:{ step:1, deckId:"tpl-full", content:null, images:{} },
   deck:null,
   selected:0,
@@ -340,6 +353,17 @@ function pageById(id){ return DB.pages.find((p) => p.id === id); }
 function deckById(id){ return DB.decks.find((d) => d.id === id); }
 function galleryById(id){ return DB.gallery.find((g) => g.id === id); }
 function flatPages(deck){ return deck.sections.reduce((acc, s) => acc.concat(s.pages), []); }
+function addPagesToSection(deck, sectionId, pageIds){
+  const sec = deck.sections.find((x) => x.id === sectionId);
+  if (!sec) return 0;
+  let added = 0;
+  (pageIds || []).forEach((pid) => {
+    if (!pageById(pid)) return;
+    sec.pages.push(pid);
+    added++;
+  });
+  return added;
+}
 function sectionOf(decks, id){ return (decks || DB.decks).reduce((acc, d) => acc.concat(d.sections), []).find((s) => s.id === id); }
 
 /* 图片槽位决策：手动 > 图库 > 待配图（key 形如 "p-hl-1:0"） */
@@ -574,7 +598,38 @@ function viewDecks(){
     + '<div class="col-body">' + (sec ? pageRows : '<div class="empty">先选择或新建板块</div>') + "</div>"
     + (sec ? '<div class="col-foot"><select id="add-page" style="flex:1">' + pagePicker + "</select>"
     + '<button class="btn sm" data-act="add-page">添加页</button></div>' : "")
-    + "</div></div>";
+    + "</div></div>"
+    + pageLibraryHTML(sec);
+}
+
+/* 页面模板预览选择区 */
+function pageLibraryHTML(sec){
+  const types = ["全部", "封面", "亮点", "行程", "汇总", "须知"];
+  const chips = types.map((tp) => '<button class="chip ' + (state.pickFilter === tp ? "on" : "") + '" data-pick-filter="' + tp + '">' + tp + "</button>").join("");
+  const list = DB.pages.filter((p) => state.pickFilter === "全部" || p.type === state.pickFilter);
+  const cards = list.map((p) => {
+    const used = sec && sec.pages.indexOf(p.id) >= 0;
+    const on = state.pickPages.indexOf(p.id) >= 0;
+    return '<div class="pick-card ' + (on ? "on" : "") + '" data-pick-page="' + p.id + '">'
+      + '<span class="pick-check">✓</span>'
+      + '<button class="pick-add" data-quick-add="' + p.id + '" title="直接加入当前板块">＋</button>'
+      + '<div class="stage">' + slideHTML(p, CONTENT_SAMPLE, { index:0 }) + "</div>"
+      + '<div class="pick-meta"><div class="ellipsis" style="font-size:12.5px;font-weight:600">' + esc(p.name) + "</div>"
+      + '<div class="row" style="gap:6px"><span class="tag">' + esc(p.type) + "</span>"
+      + (used ? '<span class="tag ok">已在板块中</span>' : '<span class="tag" style="opacity:.6">未使用</span>') + "</div></div></div>";
+  }).join("");
+
+  const count = state.pickPages.length;
+  const target = sec ? sec.name : "（先新建板块）";
+  return '<div class="card pagelib"><div class="row" style="justify-content:space-between">'
+    + '<div><div style="font-size:13px;font-weight:600">页面模板 <span class="sub" style="font-weight:400">· 选中后加入「' + esc(target) + "」板块</span></div>"
+    + '<div class="hint">点卡片多选，点右上角 ＋ 直接加入；已在板块中的页面会标出</div></div>'
+    + '<div class="filters" style="margin:0">' + chips + "</div></div>"
+    + (cards ? '<div class="grid-pick">' + cards + "</div>" : '<div class="empty" style="margin-top:12px">该类型下暂无页面模板</div>')
+    + '<div class="pick-bar"><span class="sub">已选 <b style="color:#cfe0ff">' + count + "</b> 个页面</span>"
+    + '<button class="btn primary sm" data-act="add-picked"' + (count && sec ? "" : " disabled") + ">加入板块</button>"
+    + '<button class="btn sm" data-act="clear-picked"' + (count ? "" : " disabled") + ">清空选择</button>"
+    + '<span class="hint" style="margin-left:auto">最多可一次加入多个页面，顺序按选择先后</span></div></div>';
 }
 
 /* =========================================================
@@ -1003,10 +1058,38 @@ document.addEventListener("click", (e) => {
   if (chip){ state.filter = chip.dataset.filter; render(); return; }
 
   const deckItem = e.target.closest("[data-deck]");
-  if (deckItem){ state.activeDeck = deckItem.dataset.deck; render(); return; }
+  if (deckItem){
+    state.activeDeck = deckItem.dataset.deck;
+    state.activeSection = null;
+    state.pickPages = [];
+    render(); return;
+  }
 
   const pick = e.target.closest("[data-pick]");
   if (pick){ state.wizard.deckId = pick.dataset.pick; render(); return; }
+
+  const quickAdd = e.target.closest("[data-quick-add]");
+  if (quickAdd){
+    const d = deckById(state.activeDeck);
+    const sec = d.sections.find((x) => x.id === state.activeSection) || d.sections[0];
+    if (!sec){ toast("先在上方新建一个板块", "warn"); return; }
+    addPagesToSection(d, sec.id, [quickAdd.dataset.quickAdd]);
+    render(); toast("已加入「" + sec.name + "」");
+    return;
+  }
+
+  const pickCard = e.target.closest("[data-pick-page]");
+  if (pickCard){
+    const id = pickCard.dataset.pickPage;
+    const i = state.pickPages.indexOf(id);
+    if (i >= 0) state.pickPages.splice(i, 1);
+    else state.pickPages.push(id);
+    render();
+    return;
+  }
+
+  const pickFilter = e.target.closest("[data-pick-filter]");
+  if (pickFilter){ state.pickFilter = pickFilter.dataset.pickFilter; render(); return; }
 
   const moveSec = e.target.closest("[data-move-sec]");
   if (moveSec){
@@ -1120,6 +1203,17 @@ document.addEventListener("click", (e) => {
     render(); toast("已新建方案模板：" + name);
     return;
   }
+  if (a === "add-picked"){
+    const d = deckById(state.activeDeck);
+    const sec = d.sections.find((x) => x.id === state.activeSection) || d.sections[0];
+    if (!sec){ toast("先在上方新建一个板块", "warn"); return; }
+    const added = addPagesToSection(d, sec.id, state.pickPages);
+    state.pickPages = [];
+    render(); toast("已向「" + sec.name + "」加入 " + added + " 个页面");
+    return;
+  }
+  if (a === "clear-picked"){ state.pickPages = []; render(); return; }
+
   if (a === "new-section"){
     const sel = document.getElementById("new-section-type");
     const d = deckById(state.activeDeck);

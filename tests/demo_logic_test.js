@@ -50,6 +50,53 @@ t("删除板块不会影响其他板块", function(){
   eq(d.sections[0].pages.join(","), keep.join(","));
 });
 
+t("批量加页按顺序写入板块", function(){
+  var d = deckById("tpl-sum");
+  var sec = d.sections[0];
+  var before = sec.pages.length;
+  var added = addPagesToSection(d, sec.id, ["p-it-2", "p-hl-1"]);
+  eq(added, 2);
+  eq(sec.pages.length, before + 2);
+  eq(sec.pages[sec.pages.length - 2], "p-it-2");
+  eq(sec.pages[sec.pages.length - 1], "p-hl-1");
+  sec.pages.splice(before, 2);
+});
+
+t("加页忽略非法页 id 与不存在的板块", function(){
+  var d = deckById("tpl-sum");
+  eq(addPagesToSection(d, "not-exist", ["p-hl-1"]), 0);
+  var sec = d.sections[0];
+  var before = sec.pages.length;
+  eq(addPagesToSection(d, sec.id, ["nope", ""]), 0);
+  eq(sec.pages.length, before);
+});
+
+t("页面模板选择区渲染全部页面并标注已用", function(){
+  state.pickPages = [];
+  state.pickFilter = "全部";
+  var sec = deckById("tpl-full").sections[1];
+  var html = pageLibraryHTML(sec);
+  eq((html.match(/data-pick-page=/g) || []).length, DB.pages.length);
+  has(html, "已在板块中");
+  has(html, "data-quick-add");
+  has(html, "已选 <b style=\"color:#cfe0ff\">0</b> 个页面");
+});
+
+t("选择区按页型筛选", function(){
+  state.pickFilter = "行程";
+  var html = pageLibraryHTML(deckById("tpl-full").sections[2]);
+  var expected = DB.pages.filter(function(p){ return p.type === "行程"; }).length;
+  eq((html.match(/data-pick-page=/g) || []).length, expected);
+  state.pickFilter = "全部";
+});
+
+t("选择态标记选中卡片", function(){
+  state.pickPages = ["p-hl-1"];
+  var html = pageLibraryHTML(deckById("tpl-full").sections[1]);
+  has(html, 'class="pick-card on" data-pick-page="p-hl-1"');
+  state.pickPages = [];
+});
+
 /* ---------- 排版生成 ---------- */
 
 t("生成 6 页且每页都是幻灯片", function(){
