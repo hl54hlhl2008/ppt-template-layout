@@ -1,0 +1,20 @@
+# 统一换行
+* text=auto eol=lf
+
+# Office 二进制文件：不做换行转换 / 不参与文本 diff
+*.pptx binary
+*.potx binary
+*.docx binary
+*.xlsx binary
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.ttf  binary
+*.otf  binary
+
+# 文本文件
+*.md   text
+*.sh   text eol=lf
+*.py   text
+*.json text

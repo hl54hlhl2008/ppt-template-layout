@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Office / PowerPoint 临时文件
+~$*
+*.tmp
+*.TMP
+*.pptx~
+*.docx~
+
+# 编辑与构建产物
+.venv/
+venv/
+node_modules/
+dist/
+build/
+output/
+*.pyc
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# 本地密钥与配置
+.env
+.env.local
+*.pem
+*.key
+secrets/
+
+# 渲染/导出中间文件
+render/
+*.png.bak
+.cache/
